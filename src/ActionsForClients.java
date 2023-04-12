@@ -1,0 +1,17 @@
+import java.io.*;
+import java.net.*;
+
+public class ActionsForClients extends Thread {
+    /* This class is used to perform the actions the app clients ask for */
+    ObjectInputStream in;
+    ObjectOutputStream out;
+    public ActionsForClients(Socket connection){
+        try{
+            out = new ObjectOutputStream(connection.getOutputStream());
+            in = new ObjectInputStream(connection.getInputStream());
+        }catch(IOException exc){exc.printStackTrace();}
+    }
+
+    @Override
+    public void run(){}
+}
