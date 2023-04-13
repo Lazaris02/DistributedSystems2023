@@ -11,6 +11,12 @@ public class ActionsForWorkers extends Thread{
             in = new ObjectInputStream(connection.getInputStream());
         }catch(IOException exc){exc.printStackTrace();}
     }
+
+    /* getters */
+
+    public ObjectInputStream getIn(){return in;}
+    public ObjectOutputStream getOut(){return out;}
+
     @Override
     public void run(){}
 }
