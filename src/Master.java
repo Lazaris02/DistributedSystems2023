@@ -1,74 +1,96 @@
 import java.io.*;
 import java.net.*;
 
-public class Master implements Server {
-    private int num_of_workers, app_port, workers_port;
+
+public class Master extends Thread implements Server {
+    private static int num_of_workers;
+    private static final int client_port = 5377;
+    private static final int worker_port = 6769;
+    private int port;
 
     /* The sockets that receive the requests */
-    private ServerSocket app_s , workers_s;
+    private ServerSocket serverSocket;
 
-    /* The sockets that hand;e the requests */
-    Socket app_provider, workers_provider;
+    /* The sockets that handle the requests */
+    private Socket provider;
 
-    Worker [] workers; /* to store the workers */
+    static Worker [] workers; /* to store the workers */
 
-    /* NEEDS A HASHMAP FOR CLIENTS */
 
-    public Master(int num_of_workers){
-        this.num_of_workers =num_of_workers; // might be needed for round robbin
-        this.app_port = 5007;
-        this.workers_port = 6044;
+    /* Constructors */
 
-        /* Open the  server with 2 ports */
-        openServer();
-        
+    public Master(int workers_num){
+
+        num_of_workers = workers_num;
+
         /* Initialize workers */
-        workers = new Worker[num_of_workers];
-        for(int i = 0; i<num_of_workers; i++)
-            workers[i] = new Worker(i);
 
-    } // Constructor
+        workers = new Worker[num_of_workers];
+
+        for(int i = 0; i<num_of_workers; i++){
+            workers[i] = new Worker(i);
+        }
+    }
+
+    public Master(){/*Default Constructor*/}
+
 
     public int getNum_of_workers(){return num_of_workers;}
 
-    public int getApp_port(){return app_port;}
-
-    public int getWorkers_port(){return workers_port;}
+    public int getPort(){return this.port;}
 
     /* Server Implementation */
+
     public void openServer(){
-        /* TODO initialize pool of threads */
-        Thread app_thread, worker_thread;
         try {
+            Thread t = null;
+
             /* Create Server Sockets */
-            this.app_s = new ServerSocket(app_port,10);
-            this.workers_s = new ServerSocket(workers_port,10);
+
+            serverSocket = new ServerSocket(port, 10);
 
             while (true) {
                 /* Accept the connections via the providerSockets */
 
-                app_provider = app_s.accept();
-                workers_provider = workers_s.accept();
+                provider = serverSocket.accept();
 
                 /* Handle the request depending on the port number*/
+                if(this.port == client_port){
+                    t = new ActionsForClients(provider);
+                    t.start();
+                } else if (this.port == worker_port) {
+                    t = new ActionsForWorkers(provider);
+                }
 
-                app_thread = new ActionsForClients(app_provider);
-                worker_thread = new ActionsForWorkers(workers_provider);
 
-                app_thread.start();
-                worker_thread.start();
             }
-
         } catch (IOException ioException) {
             ioException.printStackTrace();
         } finally {
             try {
-                app_provider.close();
-                workers_provider.close();
+                provider.close();
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void run(){
+        openServer();
+    }
+
+                /*OPEN THE SERVER*/
+    public static void main(String[] args){
+        /*I am trying to run two separate threads of the server
+         *The first thread handles the client requests
+         * The second thread handles the worker requests*/
+
+        Thread m_client = new Master(Integer.parseInt(args[0]));
+        Thread m_worker = new Master();
+        m_client.start();
+        m_worker.start();
+        
     }
 }
 

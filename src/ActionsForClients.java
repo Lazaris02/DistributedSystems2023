@@ -3,14 +3,19 @@ import java.net.*;
 
 public class ActionsForClients extends Thread {
     /* This class is used to perform the actions the app clients ask for */
-    private ObjectInputStream in; //this should be a gpx file
+    private ObjectInputStream in;
     private ObjectOutputStream out;
+
     public ActionsForClients(Socket connection){
         try{
-            out = new ObjectOutputStream(connection.getOutputStream());
             in = new ObjectInputStream(connection.getInputStream());
+            out = new ObjectOutputStream(connection.getOutputStream());
         }catch(IOException exc){exc.printStackTrace();}
-    }
+    } // Constructor
+
+    public ActionsForClients(String name){
+        super(name);
+    } // Constructor
 
     /* getters */
     public ObjectInputStream getIn(){return in;}
@@ -18,6 +23,7 @@ public class ActionsForClients extends Thread {
     public ObjectOutputStream getOut(){return out;}
 
 
-    @Override
+    @Override // probably does the mapping
     public void run(){}
+
 }
