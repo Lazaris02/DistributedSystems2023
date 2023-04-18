@@ -1,9 +1,7 @@
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 /* An interface for the Server */
 public interface Server {
-    void openServer();
-
+    /* Separate Sockets for the Workers and the Clients */
+    void openServer() throws IOException;
 }
