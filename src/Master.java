@@ -6,12 +6,12 @@ public class Master extends Thread implements Server {
     private static int num_of_workers;
     private static final int client_port = 5377;
     private static final int worker_port = 6769;
-    private int port;
+    private final int port;
 
     /* The sockets that receive the requests */
     private ServerSocket serverSocket;
 
-    /* The sockets that handle the requests */
+    /* The socket that handles the requests */
     private Socket provider;
 
     static Worker [] workers; /* to store the workers */
@@ -19,9 +19,10 @@ public class Master extends Thread implements Server {
 
     /* Constructors */
 
-    public Master(int workers_num){
+    public Master(int workers_num,int port){
 
         num_of_workers = workers_num;
+        this.port = port;
 
         /* Initialize workers */
 
@@ -32,18 +33,22 @@ public class Master extends Thread implements Server {
         }
     }
 
-    public Master(){/*Default Constructor*/}
+    public Master(int port){this.port = port;}
 
 
     public int getNum_of_workers(){return num_of_workers;}
 
     public int getPort(){return this.port;}
 
+
+    /*Map function*/
+    public void map(/*parameters*/){/*body*/} /*TODO MAP FUNCTION*/
+
     /* Server Implementation */
 
     public void openServer(){
         try {
-            Thread t = null;
+            Thread t;
 
             /* Create Server Sockets */
 
@@ -56,10 +61,11 @@ public class Master extends Thread implements Server {
 
                 /* Handle the request depending on the port number*/
                 if(this.port == client_port){
-                    t = new ActionsForClients(provider);
+                    t = new ActionsForClients(provider,this);
                     t.start();
                 } else if (this.port == worker_port) {
                     t = new ActionsForWorkers(provider);
+                    t.start();
                 }
 
 
@@ -80,14 +86,15 @@ public class Master extends Thread implements Server {
         openServer();
     }
 
+
                 /*OPEN THE SERVER*/
     public static void main(String[] args){
         /*I am trying to run two separate threads of the server
          *The first thread handles the client requests
          * The second thread handles the worker requests*/
-
-        Thread m_client = new Master(Integer.parseInt(args[0]));
-        Thread m_worker = new Master();
+        int work_num = 4; /*TODO this needs to be an argument*/
+        Thread m_client = new Master(work_num,client_port); /*Handles the clients*/
+        Thread m_worker = new Master(worker_port); /*Handles the workers*/
         m_client.start();
         m_worker.start();
         
