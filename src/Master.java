@@ -14,7 +14,7 @@ public class Master extends Thread implements Server {
     /* The socket that handles the requests */
     private Socket provider;
 
-    static Worker [] workers; /* to store the workers */
+    private static Worker [] workers; /* to store the workers */
 
 
     /* Constructors */
@@ -40,8 +40,13 @@ public class Master extends Thread implements Server {
 
     public int getPort(){return this.port;}
 
+    public static int getClient_port(){return client_port;}
+
+    public static int getWorker_port(){return worker_port;}
+
 
     /*Map function*/
+
     public void map(/*parameters*/){/*body*/} /*TODO MAP FUNCTION*/
 
     /* Server Implementation */
