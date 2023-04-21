@@ -15,6 +15,7 @@ public class Master extends Thread implements Server {
     private Socket provider;
 
     private static Worker [] workers; /* to store the workers */
+    private static int worker_turn = 0;
 
 
     /* Constructors */
@@ -29,12 +30,13 @@ public class Master extends Thread implements Server {
         workers = new Worker[num_of_workers];
 
         for(int i = 0; i<num_of_workers; i++){
-            workers[i] = new Worker(i);
+            workers[i] = new Worker(i); /*TODO might need to add arguments to the constructor*/
         }
     }
 
     public Master(int port){this.port = port;}
 
+    /*Getters*/
 
     public int getNum_of_workers(){return num_of_workers;}
 
@@ -47,7 +49,50 @@ public class Master extends Thread implements Server {
 
     /*Map function*/
 
-    public void map(/*parameters*/){/*body*/} /*TODO MAP FUNCTION*/
+    public void map(String key, String[] waypoint_lines){
+
+        /*extracts the parameters*/
+
+        String lat = extractLat(waypoint_lines[0]);
+        String lon = extractLon(waypoint_lines[0]);
+        String ele = extractEle(waypoint_lines[1]);
+        String time = extractTime(waypoint_lines[2]);
+
+        /*Creates the array*/
+        String [] values = {lat,lon,ele,time};
+
+        /*Chooses worker with round robbin*/
+
+        sendToWorker(key,values);
+    }
+
+    /*helper functions for map*/
+    private String extractLat(String line){
+        String[] find_lat_log = line.split("lon"); /*something like "lat_num" ... >*/
+        String lat = find_lat_log[0].split("lat=\"")[1];
+        lat = lat.substring(0,lat.length()-2); /*gets lat*/
+        return lat;
+    }
+
+    private String extractLon(String line){
+        String[] find_lat_log = line.split("lon"); /*something like "lat_num" ... >*/
+        String lon = find_lat_log[1].split("\"")[1];
+        lon = lon.substring(0,lon.length()-2); /*gets lat*/
+        return lon;
+    }
+
+    private String extractEle(String line){
+        return line.strip().substring(5,line.strip().length()-6);
+    }
+
+    private String extractTime(String line){return line.strip().substring(6,line.strip().length()-7);}
+
+    private synchronized void sendToWorker(String key, String[] values){
+        /*Sends the key - value pairs to the workers with round robbin*/
+
+
+    }
+
 
     /* Server Implementation */
 
@@ -97,7 +142,7 @@ public class Master extends Thread implements Server {
         /*I am trying to run two separate threads of the server
          *The first thread handles the client requests
          * The second thread handles the worker requests*/
-        int work_num = 4; /*TODO this needs to be an argument*/
+        int work_num = Integer.parseInt(args[0]);
         Thread m_client = new Master(work_num,client_port); /*Handles the clients*/
         Thread m_worker = new Master(worker_port); /*Handles the workers*/
         m_client.start();

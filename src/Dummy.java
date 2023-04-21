@@ -92,13 +92,4 @@ public class Dummy extends Thread{
 
     }
 
-
-    /*The gpx file needs to implement Serializable */
-
-    private class Gpx implements Serializable {
-        BufferedReader file;
-        public Gpx(BufferedReader file){
-            this.file = file;
-        }
-    }
 }
