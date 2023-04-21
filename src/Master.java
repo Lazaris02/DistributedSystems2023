@@ -8,6 +8,8 @@ public class Master extends Thread implements Server {
     private static final int worker_port = 6769;
     private final int port;
 
+    private static final int chunk_size = 4;
+
     /* The sockets that receive the requests */
     private ServerSocket serverSocket;
 
@@ -17,6 +19,8 @@ public class Master extends Thread implements Server {
     private static Worker [] workers; /* to store the workers */
     private static int worker_turn = 0;
 
+
+    private Chunk chunk;
 
     /* Constructors */
 
@@ -32,6 +36,10 @@ public class Master extends Thread implements Server {
         for(int i = 0; i<num_of_workers; i++){
             workers[i] = new Worker(i); /*TODO might need to add arguments to the constructor*/
         }
+
+        /*Initialize chunk*/
+        chunk = new Chunk(chunk_size);
+
     }
 
     public Master(int port){this.port = port;}
@@ -45,11 +53,11 @@ public class Master extends Thread implements Server {
     public static int getClient_port(){return client_port;}
 
     public static int getWorker_port(){return worker_port;}
-
+    public static Worker[] getWorkers(){return workers;}
 
     /*Map function*/
 
-    public void map(String key, String[] waypoint_lines){
+    public void map(String key, String[] waypoint_lines,boolean last_waypoint){
 
         /*extracts the parameters*/
 
@@ -59,11 +67,14 @@ public class Master extends Thread implements Server {
         String time = extractTime(waypoint_lines[2]);
 
         /*Creates the array*/
-        String [] values = {lat,lon,ele,time};
 
-        /*Chooses worker with round robbin*/
+        String [] key_values = {key,lat,lon,ele,time};
 
-        sendToWorker(key,values);
+        if((chunk.getData().size() == chunk_size) || last_waypoint){
+            /*Send chunk + empty chunk*/
+        }
+        else{chunk.addData(key_values);}
+
     }
 
     /*helper functions for map*/
@@ -89,7 +100,6 @@ public class Master extends Thread implements Server {
 
     private synchronized void sendToWorker(String key, String[] values){
         /*Sends the key - value pairs to the workers with round robbin*/
-
 
     }
 
@@ -142,9 +152,11 @@ public class Master extends Thread implements Server {
         /*I am trying to run two separate threads of the server
          *The first thread handles the client requests
          * The second thread handles the worker requests*/
+
         int work_num = Integer.parseInt(args[0]);
         Thread m_client = new Master(work_num,client_port); /*Handles the clients*/
         Thread m_worker = new Master(worker_port); /*Handles the workers*/
+
         m_client.start();
         m_worker.start();
         

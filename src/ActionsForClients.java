@@ -50,18 +50,25 @@ public class ActionsForClients extends Thread {
             /*Split into waypoints -- every waypoint is within <wpt> </wpt>
              */
             String [] waypoint_lines = new String[4];
+            boolean last_waypoint = false;
+
             while(!line.contains("</gpx>")){ /*TODO this only works for the specific format of the gpx files
                                                 maybe needs to change*/
                 int i =0;
                 while(!line.contains("</wpt>")){
-                    line = file.readLine();
+                    if(i!=0)
+                        line = file.readLine();
                     waypoint_lines[i] = line;
                     i++;
                 }
+                line = file.readLine();
+                if(line.contains("</gpx>")){last_waypoint = true;}
 
                 /* pass ID and a WAYPOINT to the map function of master*/
-                master.map(id,waypoint_lines);
+
+                master.map(id,waypoint_lines,last_waypoint);
             }
+
 
         }catch (IOException exc){
             exc.printStackTrace();
