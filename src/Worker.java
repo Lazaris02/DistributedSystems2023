@@ -28,7 +28,8 @@ public class Worker extends Thread {
         ObjectOutputStream out= null ;
         ObjectInputStream in = null ;
         Socket requestSocket= null ;
-        System.out.println(/*shows the threads i am in */);
+
+
         try {
             String host = "localhost";
             /* Create socket for contacting the server on port 4321*/
@@ -40,24 +41,31 @@ public class Worker extends Thread {
 
             chunk=(Chunk) in.readObject();
             waypoints=extractChunk(chunk);
+
             double lat1=getStartLat(waypoints);
             double lat2=getFinalLat(waypoints);
             double lon1=getStartLon(waypoints);
             double lon2=getFinalLon(waypoints);
             double ele1=getStartEle(waypoints);
             double ele2=getFinalEle(waypoints);
+
             LocalDateTime time1=getStartTime(waypoints);
             LocalDateTime time2=getFinalTime(waypoints);
+
             List<Double> elevationlist=getElevations(waypoints);
+
             double elevation;
             double totalTi=totalTime(time1,time2);
             double totalDis=distance(lat1,lat2,lon1,lon2,ele1,ele2);
             double avSpeed=averageSpeed(totalDis,totalTi);
+
             if(elevationlist.size()>1){elevation=getTotElevation(elevationlist);}
             else elevation=0;
+
             Double results[]={totalDis,totalTi,avSpeed,elevation};
 
             out.writeObject(results);
+            out.flush();
 
         } catch (UnknownHostException unknownHost) {
             System.err.println("You are trying to connect to an unknown host!");
@@ -74,8 +82,6 @@ public class Worker extends Thread {
             }
         }
     }
-
-
 
 
     private static ArrayList<String[]> extractChunk(Chunk chunk){

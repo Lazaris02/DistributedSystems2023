@@ -17,8 +17,6 @@ public class Master extends Thread implements Server {
     private Socket provider;
 
     private static Worker [] workers; /* to store the workers */
-    private static int worker_turn = 0;
-
 
     private Chunk chunk;
 
@@ -34,7 +32,7 @@ public class Master extends Thread implements Server {
         workers = new Worker[num_of_workers];
 
         for(int i = 0; i<num_of_workers; i++){
-            workers[i] = new Worker(i); /*TODO might need to add arguments to the constructor*/
+            workers[i] = new Worker(i);
         }
 
         /*Initialize chunk*/
@@ -68,16 +66,19 @@ public class Master extends Thread implements Server {
 
         /*Creates the array*/
 
-        String [] key_values = {key,lat,lon,ele,time};
+        String [] key_values = {key,lat,lon,ele,time}; /*TODO checked till here*/
+
+        chunk.addData(key_values);
 
         if((chunk.getData().size() == chunk_size) || last_waypoint){
-            /*Send chunk + empty chunk*/
+            /*send the chunk  to the workers with round robbin via TCP connection*/
+
         }
-        else{chunk.addData(key_values);}
 
     }
 
     /*helper functions for map*/
+
     private String extractLat(String line){
         String[] find_lat_log = line.split("lon"); /*something like "lat_num" ... >*/
         String lat = find_lat_log[0].split("lat=\"")[1];
@@ -98,10 +99,6 @@ public class Master extends Thread implements Server {
 
     private String extractTime(String line){return line.strip().substring(6,line.strip().length()-7);}
 
-    private synchronized void sendToWorker(String key, String[] values){
-        /*Sends the key - value pairs to the workers with round robbin*/
-
-    }
 
 
     /* Server Implementation */
@@ -124,7 +121,7 @@ public class Master extends Thread implements Server {
                     t = new ActionsForClients(provider,this);
                     t.start();
                 } else if (this.port == worker_port) {
-                    t = new ActionsForWorkers(provider);
+                    t = new ActionsForWorkers(provider, this );
                     t.start();
                 }
 
