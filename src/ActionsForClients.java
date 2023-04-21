@@ -39,9 +39,10 @@ public class ActionsForClients extends Thread {
          * after that the reduce process starts and the file*/
 
         try{
-            Gpx gpx = (Gpx) in.readObject();
-            BufferedReader file = gpx.getFile();
+            File gpx = (File) in.readObject();
+
             /*find the "creator" and use it as an id */
+            BufferedReader file = new BufferedReader(new FileReader(gpx));
 
             file.readLine(); // first line is useless
             String line = file.readLine(); // second line contains the creator
@@ -49,9 +50,11 @@ public class ActionsForClients extends Thread {
 
             /*Split into waypoints -- every waypoint is within <wpt> </wpt>
              */
+
             String [] waypoint_lines = new String[4];
             boolean last_waypoint = false;
 
+            line = file.readLine();
             while(!line.contains("</gpx>")){ /*TODO this only works for the specific format of the gpx files
                                                 maybe needs to change*/
                 int i =0;
@@ -68,7 +71,6 @@ public class ActionsForClients extends Thread {
 
                 master.map(id,waypoint_lines,last_waypoint);
             }
-
 
         }catch (IOException exc){
             exc.printStackTrace();

@@ -4,9 +4,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class Dummy extends Thread{
-    BufferedReader file;
+    File file;
 
-    public Dummy(BufferedReader file){
+    public Dummy(File file){
         this.file = file;
     }
 
@@ -27,20 +27,19 @@ public class Dummy extends Thread{
 
             /*Sends the gpx file*/
 
-            Gpx gpx = new Gpx(file);
-            out.writeObject(gpx);
+            out.writeObject(file);
             out.flush();
 
             /*AWAITS FOR THE RESULTS FROM MASTER
             * READS IT IN SOME KIND OF LIST*/
-            ArrayList<String> results = (ArrayList<String>) in.readObject();
+//            ArrayList<String> results = (ArrayList<String>) in.readObject();
 
         } catch (UnknownHostException unknownHost) {
             System.err.println("You are trying to connect to an unknown host!");
         } catch (IOException ioException) {
             ioException.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+//        } catch (ClassNotFoundException e) {
+//            throw new RuntimeException(e);
         } finally {
             try {
                 in.close(); out.close();
@@ -60,17 +59,18 @@ public class Dummy extends Thread{
         * Waits for results
         * Prints results*/
 
-        try{
             /*READS THE GPX FILES*/
 
-            BufferedReader in1 = new BufferedReader(new FileReader("./gpx_files/route1.gpx"));
-            BufferedReader in2 = new BufferedReader(new FileReader("./gpx_files/route2.gpx"));
-            BufferedReader in3 = new BufferedReader(new FileReader("./gpx_files/route3.gpx"));
-            BufferedReader in4 = new BufferedReader(new FileReader("./gpx_files/route4.gpx"));
-            BufferedReader in5 = new BufferedReader(new FileReader("./gpx_files/route5.gpx"));
-            BufferedReader in6 = new BufferedReader(new FileReader("./gpx_files/route6.gpx"));
+            File in1 = new File("./gpx_files/route1.gpx");
+            File in2 = new File("./gpx_files/route2.gpx");
+            File in3 = new File("./gpx_files/route3.gpx");
+            File in4 = new File("./gpx_files/route4.gpx");
+            File in5 = new File("./gpx_files/route5.gpx");
+            File in6 = new File("./gpx_files/route6.gpx");
+
 
             /*INIT CLIENTS*/
+
             Dummy dummy1 = new Dummy(in1);
             Dummy dummy2 = new Dummy(in2);
             Dummy dummy3 = new Dummy(in3);
@@ -85,10 +85,6 @@ public class Dummy extends Thread{
             dummy5.start();
             dummy6.start();
 
-
-        } catch(IOException exc){
-            exc.printStackTrace();
-        }
 
     }
 

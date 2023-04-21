@@ -5,15 +5,18 @@ public class ActionsForWorkers extends Thread{
     /* This class is used to perform the actions the workers ask for */
     private ObjectOutputStream out;
     private ObjectInputStream in;
+
+    private Master master;
     private Worker worker;
-    public ActionsForWorkers(Socket connection){
+    public ActionsForWorkers(Socket connection,Master master){
         try{
             out = new ObjectOutputStream(connection.getOutputStream());
             in = new ObjectInputStream(connection.getInputStream());
+            this.master = master;
+
         }catch(IOException exc){exc.printStackTrace();}
     } // Constructor
 
-    public ActionsForWorkers(String name){super(name);} // Constructor
 
     /* getters */
 
