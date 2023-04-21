@@ -3,9 +3,9 @@ import java.net.*;
 
 public class ActionsForWorkers extends Thread{
     /* This class is used to perform the actions the workers ask for */
-    ObjectOutputStream out;
-    ObjectInputStream in;
-
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
+    private Worker worker;
     public ActionsForWorkers(Socket connection){
         try{
             out = new ObjectOutputStream(connection.getOutputStream());
@@ -19,8 +19,11 @@ public class ActionsForWorkers extends Thread{
 
     public ObjectInputStream getIn(){return in;}
     public ObjectOutputStream getOut(){return out;}
+    public Worker getWorker() {return worker;}
 
     @Override
-    public void run(){}
+    public void run(){
+
+    }
 
 }
