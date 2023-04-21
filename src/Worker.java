@@ -3,17 +3,26 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Worker extends Thread {
     private int id;
     private int port;
+    private Chunk chunk;
+    private ArrayList<String[]> waypoints;
+    List<Double> ele;
     public Worker(int id){
         this.id = id;
         this.port=Master.getWorker_port();
     } // Constructor
+
     public int getWorkerId(){return id;}
     public int getPort(){return this.port;}
+    //getters
     @Override
     public void run(){
         ObjectOutputStream out= null ;
@@ -29,9 +38,26 @@ public class Worker extends Thread {
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             in = new ObjectInputStream(requestSocket.getInputStream());
 
-            Chunk chunk=(Chunk) in.readObject();
+            chunk=(Chunk) in.readObject();
+            waypoints=extractChunk(chunk);
+            double lat1=getStartLat(waypoints);
+            double lat2=getFinalLat(waypoints);
+            double lon1=getStartLon(waypoints);
+            double lon2=getFinalLon(waypoints);
+            double ele1=getStartEle(waypoints);
+            double ele2=getFinalEle(waypoints);
+            LocalDateTime time1=getStartTime(waypoints);
+            LocalDateTime time2=getFinalTime(waypoints);
+            List<Double> elevationlist=getElevations(waypoints);
+            double elevation;
+            double totalTi=totalTime(time1,time2);
+            double totalDis=distance(lat1,lat2,lon1,lon2,ele1,ele2);
+            double avSpeed=averageSpeed(totalDis,totalTi);
+            if(elevationlist.size()>1){elevation=getTotElevation(elevationlist);}
+            else elevation=0;
+            Double results[]={totalDis,totalTi,avSpeed,elevation};
 
-
+            out.writeObject(results);
 
         } catch (UnknownHostException unknownHost) {
             System.err.println("You are trying to connect to an unknown host!");
@@ -48,6 +74,79 @@ public class Worker extends Thread {
             }
         }
     }
+
+
+
+
+    private static ArrayList<String[]> extractChunk(Chunk chunk){
+        return chunk.getData();
+    }
+    private static double getStartLat(ArrayList<String[]> waypoints){
+        return Double.parseDouble(waypoints.get(0)[1]);
+    }
+    private static double getStartLon(ArrayList<String[]> waypoints){
+        return Double.parseDouble(waypoints.get(0)[2]);
+    }
+    private static double getFinalLat(ArrayList<String[]> waypoints){
+        return Double.parseDouble(waypoints.get(waypoints.size()-1)[1]);
+    }
+    private static double getFinalLon(ArrayList<String[]> waypoints){
+        return Double.parseDouble(waypoints.get(waypoints.size()-1)[2]);
+    }
+    private static double getStartEle(ArrayList<String[]> waypoints){
+        return Double.parseDouble(waypoints.get(0)[3]);
+    }
+    private static double getFinalEle(ArrayList<String[]> waypoints){
+        return Double.parseDouble(waypoints.get(waypoints.size()-1)[3]);
+    }
+    private static LocalDateTime getStartTime(ArrayList<String[]> waypoints){
+        return LocalDateTime.parse(waypoints.get(0)[4]);
+    }
+    private static LocalDateTime getFinalTime(ArrayList<String[]> waypoints){
+        return LocalDateTime.parse(waypoints.get(waypoints.size()-1)[4]);
+    }
+    private List<Double> getElevations(ArrayList<String[]> waypoints) {
+
+        for(String[] w:waypoints){
+            ele.add(Double.parseDouble(w[3]));
+        }
+        return ele;
+    }
+    private static double distance(double lat1, double lat2, double lon1,
+                                  double lon2, double el1, double el2) {
+
+        final int R = 6371; // Radius of the earth
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = R * c * 1000; // convert to meters
+
+        double height = el1 - el2;
+
+        distance = Math.pow(distance, 2) + Math.pow(height, 2);
+
+        return Math.sqrt(distance);
+    }
+    private static double totalTime(LocalDateTime time1,LocalDateTime time2){
+        Duration duration=Duration.between(time1,time2);
+        return duration.toSeconds();
+    }
+    private static double averageSpeed(double distance,double time){
+        double avspeed= distance/time;// m/s
+        return 3.6*avspeed;//km/h
+    }
+    private double getTotElevation(List<Double> elevations) {
+        double sum=0;
+        for(int i =1;i<elevations.size();i++){
+            if(elevations.get(i)> elevations.get(i - 1)){sum+=elevations.get(i - 1)-elevations.get(i);}
+        }
+        return sum;
+    }
+
 
     public static void main(String[] args){
         Worker[] workers=Master.getWorkers();
