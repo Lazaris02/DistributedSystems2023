@@ -72,6 +72,7 @@ public class Master extends Thread implements Server {
 
         if((chunk.getData().size() == chunk_size) || last_waypoint){
             /*send the chunk  to the workers with round robbin via TCP connection*/
+            sendToWorker();
 
         }
 
@@ -100,6 +101,14 @@ public class Master extends Thread implements Server {
     private String extractTime(String line){return line.strip().substring(6,line.strip().length()-7);}
 
 
+    private synchronized void sendToWorker(){
+            try{
+                ObjectOutputStream out = new ObjectOutputStream(provider.getOutputStream());
+            }catch (UnknownHostException exc){System.err.println("Unknown host ");
+            }catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+    }
 
     /* Server Implementation */
 
