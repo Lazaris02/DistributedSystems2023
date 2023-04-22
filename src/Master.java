@@ -1,11 +1,17 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Queue;
 
 
 public class Master extends Thread implements Server {
     private static int num_of_workers;
+
     private static final int client_port = 5377;
+
     private static final int worker_port = 6769;
+
     private final int port;
 
     private static final int chunk_size = 4;
@@ -18,7 +24,8 @@ public class Master extends Thread implements Server {
 
     private static Worker [] workers; /* to store the workers */
 
-    private Chunk chunk;
+    private static HashMap<String,Chunk> chunks;
+
 
     /* Constructors */
 
@@ -35,8 +42,8 @@ public class Master extends Thread implements Server {
             workers[i] = new Worker(i);
         }
 
-        /*Initialize chunk*/
-        chunk = new Chunk(chunk_size);
+        /*Initialize chunks*/
+        chunks = new ArrayList<>();
 
     }
 
@@ -53,6 +60,8 @@ public class Master extends Thread implements Server {
     public static int getWorker_port(){return worker_port;}
     public static Worker[] getWorkers(){return workers;}
 
+    public static HashMap<String,Chunk> getChunks(){return chunks;}
+
     /*Map function*/
 
     public void map(String key, String[] waypoint_lines,boolean last_waypoint){
@@ -68,16 +77,19 @@ public class Master extends Thread implements Server {
 
         String [] key_values = {key,lat,lon,ele,time}; /*TODO checked till here*/
 
-        chunk.addData(key_values);
+        addToChunk(key,key_values);
+
+
 
 //        for(String k : key_values){System.out.println(k);}
 
-        if((chunk.getData().size() == chunk_size) || last_waypoint){
-            /*send the chunk  to the workers with round robbin via TCP connection*/
-            System.out.println("I am in and I am " + key_values[0]);
-            sendToWorker();
-
-        }
+//        if((chunk.getData().size() == chunk_size) || last_waypoint){
+//            /*send the chunk  to the workers with round robbin via TCP connection*/
+//            System.out.println("I am in and I am " + key_values[0]);
+//
+//
+//
+//        }
 
     }
 
@@ -103,16 +115,16 @@ public class Master extends Thread implements Server {
 
     private String extractTime(String line){return line.strip().substring(6,line.strip().length()-7);}
 
-
-    private  void sendToWorker(){
-            try{
-                ObjectOutputStream out = new ObjectOutputStream(worker_provider.getOutputStream());
-                out.writeObject(chunk);
-            }catch (UnknownHostException exc){System.err.println("Unknown host ");
-            }catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+    private synchronized  void addToChunk(String key,String[] key_values){
+        if(chunks.containsKey(key)){
+            chunks.get(key).addData(key_values);
+        }else{
+            Chunk c = new Chunk(chunk_size);
+            c.addData(key_values);
+            chunks.put(key,c);
+        }
     }
+
 
     /* Server Implementation */
 

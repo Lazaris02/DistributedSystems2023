@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
 
 public class ActionsForWorkers extends Thread{
     /* This class is used to perform the actions the workers ask for */
@@ -26,6 +27,8 @@ public class ActionsForWorkers extends Thread{
 
     @Override
     public void run(){
+        while(Master.getChunks().isEmpty()){System.out.println("Waiting for chunk");}
+
 
     }
 

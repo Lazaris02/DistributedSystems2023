@@ -15,6 +15,7 @@ public class Dummy extends Thread{
         ObjectOutputStream out= null ;
         ObjectInputStream in = null ;
         Socket requestSocket= null ;
+
         System.out.println(/*shows the threads i am in */);
         try {
             String host = "localhost";
