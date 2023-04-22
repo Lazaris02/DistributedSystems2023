@@ -14,7 +14,7 @@ public class Master extends Thread implements Server {
     private ServerSocket serverSocket;
 
     /* The socket that handles the requests */
-    private Socket provider;
+    private static Socket client_provider, worker_provider;
 
     private static Worker [] workers; /* to store the workers */
 
@@ -70,8 +70,11 @@ public class Master extends Thread implements Server {
 
         chunk.addData(key_values);
 
+//        for(String k : key_values){System.out.println(k);}
+
         if((chunk.getData().size() == chunk_size) || last_waypoint){
             /*send the chunk  to the workers with round robbin via TCP connection*/
+            System.out.println("I am in and I am " + key_values[0]);
             sendToWorker();
 
         }
@@ -101,9 +104,10 @@ public class Master extends Thread implements Server {
     private String extractTime(String line){return line.strip().substring(6,line.strip().length()-7);}
 
 
-    private synchronized void sendToWorker(){
+    private  void sendToWorker(){
             try{
-                ObjectOutputStream out = new ObjectOutputStream(provider.getOutputStream());
+                ObjectOutputStream out = new ObjectOutputStream(worker_provider.getOutputStream());
+                out.writeObject(chunk);
             }catch (UnknownHostException exc){System.err.println("Unknown host ");
             }catch (IOException e) {
                 throw new RuntimeException(e);
@@ -122,15 +126,14 @@ public class Master extends Thread implements Server {
 
             while (true) {
                 /* Accept the connections via the providerSockets */
-
-                provider = serverSocket.accept();
-
                 /* Handle the request depending on the port number*/
                 if(this.port == client_port){
-                    t = new ActionsForClients(provider,this);
+                    client_provider = serverSocket.accept();
+                    t = new ActionsForClients(client_provider,this);
                     t.start();
                 } else if (this.port == worker_port) {
-                    t = new ActionsForWorkers(provider, this );
+                    worker_provider = serverSocket.accept();
+                    t = new ActionsForWorkers(worker_provider, this );
                     t.start();
                 }
 
@@ -140,7 +143,8 @@ public class Master extends Thread implements Server {
             ioException.printStackTrace();
         } finally {
             try {
-                provider.close();
+                if(this.port == client_port){client_provider.close();}
+                if(this.port == worker_port){worker_provider.close();}
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -161,10 +165,13 @@ public class Master extends Thread implements Server {
 
         int work_num = Integer.parseInt(args[0]);
         Thread m_client = new Master(work_num,client_port); /*Handles the clients*/
+
         Thread m_worker = new Master(worker_port); /*Handles the workers*/
 
         m_client.start();
+        System.out.println("hi from thread1");
         m_worker.start();
+        System.out.println("hi from thread2");
         
     }
 }
