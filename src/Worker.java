@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Worker extends Thread {
@@ -32,7 +33,7 @@ public class Worker extends Thread {
 
         try {
             String host = "localhost";
-            /* Create socket for contacting the server on port 4321*/
+            /* Create socket for contacting the server on port worker_port*/
             requestSocket = new Socket(host, Master.getWorker_port());
 
             /* Create the streams to send and receive data from server */
@@ -40,7 +41,10 @@ public class Worker extends Thread {
             in = new ObjectInputStream(requestSocket.getInputStream());
 
             chunk=(Chunk) in.readObject();
+
             waypoints=extractChunk(chunk);
+
+            System.out.println(Arrays.toString(waypoints.get(0)) +" Worker");
 
             double lat1=getStartLat(waypoints);
             double lat2=getFinalLat(waypoints);

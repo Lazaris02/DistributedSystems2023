@@ -1,11 +1,18 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
 
 
 public class Master extends Thread implements Server {
     private static int num_of_workers;
+
     private static final int client_port = 5377;
+
     private static final int worker_port = 6769;
+
     private final int port;
 
     private static final int chunk_size = 4;
@@ -14,11 +21,12 @@ public class Master extends Thread implements Server {
     private ServerSocket serverSocket;
 
     /* The socket that handles the requests */
-    private Socket provider;
+    private static Socket client_provider, worker_provider;
 
     private static Worker [] workers; /* to store the workers */
 
-    private Chunk chunk;
+    private static HashMap<String,Chunk> chunks;
+
 
     /* Constructors */
 
@@ -35,8 +43,8 @@ public class Master extends Thread implements Server {
             workers[i] = new Worker(i);
         }
 
-        /*Initialize chunk*/
-        chunk = new Chunk(chunk_size);
+        /*Initialize chunks*/
+        chunks = new HashMap<>();
 
     }
 
@@ -53,6 +61,8 @@ public class Master extends Thread implements Server {
     public static int getWorker_port(){return worker_port;}
     public static Worker[] getWorkers(){return workers;}
 
+    public static HashMap<String,Chunk> getChunks(){return chunks;}
+
     /*Map function*/
 
     public void map(String key, String[] waypoint_lines,boolean last_waypoint){
@@ -68,13 +78,19 @@ public class Master extends Thread implements Server {
 
         String [] key_values = {key,lat,lon,ele,time}; /*TODO checked till here*/
 
-        chunk.addData(key_values);
+        addToChunk(key,key_values);
 
-        if((chunk.getData().size() == chunk_size) || last_waypoint){
-            /*send the chunk  to the workers with round robbin via TCP connection*/
-            sendToWorker();
 
-        }
+
+//        for(String k : key_values){System.out.println(k);}
+
+//        if((chunk.getData().size() == chunk_size) || last_waypoint){
+//            /*send the chunk  to the workers with round robbin via TCP connection*/
+//            System.out.println("I am in and I am " + key_values[0]);
+//
+//
+//
+//        }
 
     }
 
@@ -100,15 +116,28 @@ public class Master extends Thread implements Server {
 
     private String extractTime(String line){return line.strip().substring(6,line.strip().length()-7);}
 
-
-    private synchronized void sendToWorker(){
-            try{
-                ObjectOutputStream out = new ObjectOutputStream(provider.getOutputStream());
-            }catch (UnknownHostException exc){System.err.println("Unknown host ");
-            }catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+    private synchronized  void addToChunk(String key,String[] key_values){
+        if(chunks.containsKey(key)){
+            chunks.get(key).addData(key_values);
+        }else{
+            Chunk c = new Chunk(chunk_size);
+            c.addData(key_values);
+            chunks.put(key,c);
+        }
     }
+
+    public synchronized Chunk fetchChunk(){
+        /*Gets a ready chunk from the HashMap -- TODO define what a ready chunk is*/
+        for(Map.Entry<String,Chunk> hashmap : chunks.entrySet()){
+            if(hashmap.getValue().getData().size() >=2){
+                Chunk toFetch = hashmap.getValue();
+                chunks.remove(hashmap.getKey());
+                return toFetch;
+            }
+        }
+        return null;
+    }
+
 
     /* Server Implementation */
 
@@ -122,15 +151,14 @@ public class Master extends Thread implements Server {
 
             while (true) {
                 /* Accept the connections via the providerSockets */
-
-                provider = serverSocket.accept();
-
                 /* Handle the request depending on the port number*/
                 if(this.port == client_port){
-                    t = new ActionsForClients(provider,this);
+                    client_provider = serverSocket.accept();
+                    t = new ActionsForClients(client_provider,this);
                     t.start();
                 } else if (this.port == worker_port) {
-                    t = new ActionsForWorkers(provider, this );
+                    worker_provider = serverSocket.accept();
+                    t = new ActionsForWorkers(worker_provider, this );
                     t.start();
                 }
 
@@ -140,7 +168,8 @@ public class Master extends Thread implements Server {
             ioException.printStackTrace();
         } finally {
             try {
-                provider.close();
+                if(this.port == client_port){client_provider.close();}
+                if(this.port == worker_port){worker_provider.close();}
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -161,10 +190,13 @@ public class Master extends Thread implements Server {
 
         int work_num = Integer.parseInt(args[0]);
         Thread m_client = new Master(work_num,client_port); /*Handles the clients*/
+
         Thread m_worker = new Master(worker_port); /*Handles the workers*/
 
         m_client.start();
+        System.out.println("hi from thread1");
         m_worker.start();
+        System.out.println("hi from thread2");
         
     }
 }
