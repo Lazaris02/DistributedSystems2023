@@ -11,18 +11,23 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Worker extends Thread {
-    private int id;
+    private int worker_id;
     private int port;
+
     private Chunk chunk;
     private ArrayList<String[]> waypoints;
     List<Double> ele;
     public Worker(int id){
-        this.id = id;
+        this.worker_id = id;
         this.port=Master.getWorker_port();
     } // Constructor
 
-    public int getWorkerId(){return id;}
+    public int getWorkerId(){return worker_id;}
+
     public int getPort(){return this.port;}
+
+
+
     //getters
     @Override
     public void run(){
@@ -159,9 +164,15 @@ public class Worker extends Thread {
 
 
     public static void main(String[] args){
-        Worker[] workers=Master.getWorkers();
-        for(Worker w:workers){
-            w.start();
+        int num_workers = Master.getWorker_num();
+        System.out.println(num_workers);
+
+        Worker[] workers=new Worker[num_workers];
+
+        for(int i=0; i<num_workers; i++){
+            workers[i] = new Worker(i);
+            System.out.println("hi from worker "+i);
+            workers[i].start();
         }
     }
 

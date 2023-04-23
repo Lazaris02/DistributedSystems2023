@@ -28,13 +28,17 @@ public class ActionsForWorkers extends Thread{
     public void run(){
         while(Master.getChunks().isEmpty()){System.out.println("Waiting for chunk");}
         System.out.println("Preparing to send chunk");
+
         Chunk c = master.fetchChunk();
+
         try{
             out.writeObject(c);
             out.flush();
         }catch(IOException exc){
             exc.printStackTrace();
         }
+
+        /*waiting for input in order to reduce*/
 
     }
 

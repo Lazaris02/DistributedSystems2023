@@ -7,7 +7,7 @@ import java.util.Queue;
 
 
 public class Master extends Thread implements Server {
-    private static int num_of_workers;
+    private  static int num_of_workers = 2;
 
     private static final int client_port = 5377;
 
@@ -23,25 +23,25 @@ public class Master extends Thread implements Server {
     /* The socket that handles the requests */
     private static Socket client_provider, worker_provider;
 
-    private static Worker [] workers; /* to store the workers */
+//    static Worker [] workers; /* to store the workers */
 
     private static HashMap<String,Chunk> chunks;
+
 
 
     /* Constructors */
 
     public Master(int workers_num,int port){
 
-        num_of_workers = workers_num;
         this.port = port;
 
         /* Initialize workers */
 
-        workers = new Worker[num_of_workers];
+//        workers = new Worker[num_of_workers];
 
-        for(int i = 0; i<num_of_workers; i++){
-            workers[i] = new Worker(i);
-        }
+//        for(int i = 0; i<num_of_workers; i++){
+//            workers[i] = new Worker(i);
+//        }
 
         /*Initialize chunks*/
         chunks = new HashMap<>();
@@ -52,15 +52,15 @@ public class Master extends Thread implements Server {
 
     /*Getters*/
 
-    public int getNum_of_workers(){return num_of_workers;}
+    public  int getNum_of_workers(){return num_of_workers;}
 
     public int getPort(){return this.port;}
 
     public static int getClient_port(){return client_port;}
 
     public static int getWorker_port(){return worker_port;}
-    public static Worker[] getWorkers(){return workers;}
-
+//    public static Worker[] getWorkers(){return workers;}
+    public static int getWorker_num(){return num_of_workers;}
     public static HashMap<String,Chunk> getChunks(){return chunks;}
 
     /*Map function*/
@@ -128,6 +128,7 @@ public class Master extends Thread implements Server {
 
     public synchronized Chunk fetchChunk(){
         /*Gets a ready chunk from the HashMap -- TODO define what a ready chunk is*/
+
         for(Map.Entry<String,Chunk> hashmap : chunks.entrySet()){
             if(hashmap.getValue().getData().size() >=2){
                 Chunk toFetch = hashmap.getValue();
@@ -188,15 +189,18 @@ public class Master extends Thread implements Server {
          *The first thread handles the client requests
          * The second thread handles the worker requests*/
 
-        int work_num = Integer.parseInt(args[0]);
+        int work_num = 2;
+        System.out.println("Master "+work_num);
+
         Thread m_client = new Master(work_num,client_port); /*Handles the clients*/
 
-        Thread m_worker = new Master(worker_port); /*Handles the workers*/
+        Thread m_worker = new Master(work_num,worker_port); /*Handles the workers*/
 
         m_client.start();
         System.out.println("hi from thread1");
         m_worker.start();
         System.out.println("hi from thread2");
+
         
     }
 }
