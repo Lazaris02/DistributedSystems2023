@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 
 
@@ -43,7 +44,7 @@ public class Master extends Thread implements Server {
         }
 
         /*Initialize chunks*/
-        chunks = new ArrayList<>();
+        chunks = new HashMap<>();
 
     }
 
@@ -123,6 +124,18 @@ public class Master extends Thread implements Server {
             c.addData(key_values);
             chunks.put(key,c);
         }
+    }
+
+    public synchronized Chunk fetchChunk(){
+        /*Gets a ready chunk from the HashMap -- TODO define what a ready chunk is*/
+        for(Map.Entry<String,Chunk> hashmap : chunks.entrySet()){
+            if(hashmap.getValue().getData().size() >=2){
+                Chunk toFetch = hashmap.getValue();
+                chunks.remove(hashmap.getKey());
+                return toFetch;
+            }
+        }
+        return null;
     }
 
 

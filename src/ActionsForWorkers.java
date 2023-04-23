@@ -6,9 +6,8 @@ public class ActionsForWorkers extends Thread{
     /* This class is used to perform the actions the workers ask for */
     private ObjectOutputStream out;
     private ObjectInputStream in;
-
     private Master master;
-    private Worker worker;
+
     public ActionsForWorkers(Socket connection,Master master){
         try{
             out = new ObjectOutputStream(connection.getOutputStream());
@@ -23,13 +22,23 @@ public class ActionsForWorkers extends Thread{
 
     public ObjectInputStream getIn(){return in;}
     public ObjectOutputStream getOut(){return out;}
-    public Worker getWorker() {return worker;}
+
 
     @Override
     public void run(){
         while(Master.getChunks().isEmpty()){System.out.println("Waiting for chunk");}
-
+        System.out.println("Preparing to send chunk");
+        Chunk c = master.fetchChunk();
+        try{
+            out.writeObject(c);
+            out.flush();
+        }catch(IOException exc){
+            exc.printStackTrace();
+        }
 
     }
+
+
+
 
 }
