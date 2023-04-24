@@ -6,9 +6,7 @@ import java.net.UnknownHostException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class Worker extends Thread {
     private int worker_id;
@@ -16,7 +14,9 @@ public class Worker extends Thread {
 
     private Chunk chunk;
     private ArrayList<String[]> waypoints;
-    List<Double> ele;
+
+
+
     public Worker(int id){
         this.worker_id = id;
         this.port=Master.getWorker_port();
@@ -72,7 +72,7 @@ public class Worker extends Thread {
             else elevation=0;
 
             Double results[]={totalDis,totalTi,avSpeed,elevation};
-
+            System.out.println(results[1]);
             out.writeObject(results);
             out.flush();
 
@@ -115,13 +115,13 @@ public class Worker extends Thread {
         return Double.parseDouble(waypoints.get(waypoints.size()-1)[3]);
     }
     private static LocalDateTime getStartTime(ArrayList<String[]> waypoints){
-        return LocalDateTime.parse(waypoints.get(0)[4]);
+        return LocalDateTime.parse(waypoints.get(0)[4].substring(0,waypoints.get(0)[4].length()-1));
     }
     private static LocalDateTime getFinalTime(ArrayList<String[]> waypoints){
-        return LocalDateTime.parse(waypoints.get(waypoints.size()-1)[4]);
+        return LocalDateTime.parse(waypoints.get(waypoints.size()-1)[4].substring(0,waypoints.get(waypoints.size()-1)[4].length()-1));
     }
     private List<Double> getElevations(ArrayList<String[]> waypoints) {
-
+        List<Double> ele=new ArrayList<>();
         for(String[] w:waypoints){
             ele.add(Double.parseDouble(w[3]));
         }
