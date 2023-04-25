@@ -16,19 +16,15 @@ public class Worker extends Thread {
     private ArrayList<String[]> waypoints;
 
 
+    /*Constructor*/
 
     public Worker(int id){
         this.worker_id = id;
-        this.port=Master.getWorker_port();
-    } // Constructor
-
-    public int getWorkerId(){return worker_id;}
-
-    public int getPort(){return this.port;}
+        this.port=6769;
+    }
 
 
 
-    //getters
     @Override
     public void run(){
         ObjectOutputStream out= null ;
@@ -36,12 +32,14 @@ public class Worker extends Thread {
         Socket requestSocket= null ;
 
 
+
         try {
             String host = "localhost";
-            /* Create socket for contacting the server on port worker_port*/
-            requestSocket = new Socket(host, Master.getWorker_port());
+            /* Create socket for contacting the server on worker port*/
+            requestSocket = new Socket(host, this.port);
 
             /* Create the streams to send and receive data from server */
+
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             in = new ObjectInputStream(requestSocket.getInputStream());
 
@@ -49,9 +47,11 @@ public class Worker extends Thread {
 
             waypoints=extractChunk(chunk);
 
-            System.out.println(Arrays.toString(waypoints.get(0)) +" Worker");
-
-            double lat1=getStartLat(waypoints);
+            for(String[] s : waypoints){
+                System.out.println(Arrays.toString(s));
+            }
+            System.out.println("-------");
+            double lat1= getStartLat(waypoints);
             double lat2=getFinalLat(waypoints);
             double lon1=getStartLon(waypoints);
             double lon2=getFinalLon(waypoints);
@@ -71,8 +71,10 @@ public class Worker extends Thread {
             if(elevationlist.size()>1){elevation=getTotElevation(elevationlist);}
             else elevation=0;
 
-            Double results[]={totalDis,totalTi,avSpeed,elevation};
-            System.out.println(results[1]);
+            Double[] results ={totalDis,totalTi,avSpeed,elevation};
+
+            System.out.println(results[1]); /*TODO here prints*/
+
             out.writeObject(results);
             out.flush();
 
@@ -164,16 +166,13 @@ public class Worker extends Thread {
 
 
     public static void main(String[] args){
-        int num_workers = Master.getWorker_num();
-        System.out.println(num_workers);
 
-        Worker[] workers=new Worker[num_workers];
+        for (int i = 0; i < 2; i++) {
+                Worker worker = new Worker(i);
+                System.out.println("hi from worker " + i);
+                worker.start();
+            }
 
-        for(int i=0; i<num_workers; i++){
-            workers[i] = new Worker(i);
-            System.out.println("hi from worker "+i);
-            workers[i].start();
-        }
     }
 
 }

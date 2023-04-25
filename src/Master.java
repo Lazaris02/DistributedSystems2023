@@ -1,13 +1,10 @@
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 
 public class Master extends Thread implements Server {
-    private  static int num_of_workers = 2;
+    private  static int num_of_workers;
 
     private static final int client_port = 5377;
 
@@ -23,45 +20,21 @@ public class Master extends Thread implements Server {
     /* The socket that handles the requests */
     private static Socket client_provider, worker_provider;
 
-//    static Worker [] workers; /* to store the workers */
-
+    /*Collections*/
     private static HashMap<String,Chunk> chunks;
+    private static LinkedList<Chunk> readyChunks; /*TODO careful with static collections*/
 
 
 
-    /* Constructors */
+    /* Constructor */
 
-    public Master(int workers_num,int port){
-
+    public Master(int port){
         this.port = port;
-
-        /* Initialize workers */
-
-//        workers = new Worker[num_of_workers];
-
-//        for(int i = 0; i<num_of_workers; i++){
-//            workers[i] = new Worker(i);
-//        }
-
-        /*Initialize chunks*/
-        chunks = new HashMap<>();
-
+        if(this.port == client_port){chunks = new HashMap<>();}
+        if(this.port == worker_port){readyChunks=new LinkedList<>();}
     }
 
-    public Master(int port){this.port = port;}
 
-    /*Getters*/
-
-    public  int getNum_of_workers(){return num_of_workers;}
-
-    public int getPort(){return this.port;}
-
-    public static int getClient_port(){return client_port;}
-
-    public static int getWorker_port(){return worker_port;}
-//    public static Worker[] getWorkers(){return workers;}
-    public static int getWorker_num(){return num_of_workers;}
-    public static HashMap<String,Chunk> getChunks(){return chunks;}
 
     /*Map function*/
 
@@ -77,24 +50,14 @@ public class Master extends Thread implements Server {
         /*Creates the array*/
 
         String [] key_values = {key,lat,lon,ele,time}; /*TODO checked till here*/
+        /*TODO This part needs synchronize altogether*/
+        addToChunk(key,key_values); /*adds to chunk also checks if chunk is ready*/
+        addToReadyChunks(key,last_waypoint);
 
-        addToChunk(key,key_values);
-
-
-
-//        for(String k : key_values){System.out.println(k);}
-
-//        if((chunk.getData().size() == chunk_size) || last_waypoint){
-//            /*send the chunk  to the workers with round robbin via TCP connection*/
-//            System.out.println("I am in and I am " + key_values[0]);
-//
-//
-//
-//        }
 
     }
 
-    /*helper functions for map*/
+    /*Helper functions for map*/
 
     private String extractLat(String line){
         String[] find_lat_log = line.split("lon"); /*something like "lat_num" ... >*/
@@ -116,27 +79,36 @@ public class Master extends Thread implements Server {
 
     private String extractTime(String line){return line.strip().substring(6,line.strip().length()-7);}
 
-    private synchronized  void addToChunk(String key,String[] key_values){
+
+
+
+    /*Chunk Scheduling and Manipulation*/
+
+
+    private synchronized void addToChunk(String key, String[] key_values){
         if(chunks.containsKey(key)){
-            chunks.get(key).addData(key_values);
+            chunks.get(key).addData(key_values); /*check for ready here as well*/
         }else{
-            Chunk c = new Chunk(chunk_size);
+            Chunk c = new Chunk();
             c.addData(key_values);
             chunks.put(key,c);
         }
     }
 
-    public synchronized Chunk fetchChunk(){
-        /*Gets a ready chunk from the HashMap -- TODO define what a ready chunk is*/
+    private  synchronized void addToReadyChunks(String key, boolean last_waypoint){
+        /*adds a chunk to the ready queue -- removes it from hashmap
+         if it is ready*/
 
-        for(Map.Entry<String,Chunk> hashmap : chunks.entrySet()){
-            if(hashmap.getValue().getData().size() >=2){
-                Chunk toFetch = hashmap.getValue();
-                chunks.remove(hashmap.getKey());
-                return toFetch;
-            }
+        if(chunks.get(key).getData().size() == chunk_size || last_waypoint) { /**/
+            System.out.println("Adding chunk to queue");
+            readyChunks.add(chunks.get(key));
+            chunks.get(key).empty_data();
         }
-        return null;
+    }
+    public synchronized boolean readyChunk(){return !readyChunks.isEmpty();}
+
+    public synchronized Chunk fetchChunk(){
+        return readyChunks.remove();
     }
 
 
@@ -153,6 +125,7 @@ public class Master extends Thread implements Server {
             while (true) {
                 /* Accept the connections via the providerSockets */
                 /* Handle the request depending on the port number*/
+
                 if(this.port == client_port){
                     client_provider = serverSocket.accept();
                     t = new ActionsForClients(client_provider,this);
@@ -189,17 +162,17 @@ public class Master extends Thread implements Server {
          *The first thread handles the client requests
          * The second thread handles the worker requests*/
 
-        int work_num = 2;
+        int work_num = Integer.parseInt(args[0]);
+
         System.out.println("Master "+work_num);
 
-        Thread m_client = new Master(work_num,client_port); /*Handles the clients*/
+        Thread m_client = new Master(client_port); /*Handles the clients*/
 
-        Thread m_worker = new Master(work_num,worker_port); /*Handles the workers*/
+        Thread m_worker = new Master(worker_port); /*Handles the workers*/
 
         m_client.start();
-        System.out.println("hi from thread1");
         m_worker.start();
-        System.out.println("hi from thread2");
+
 
         
     }

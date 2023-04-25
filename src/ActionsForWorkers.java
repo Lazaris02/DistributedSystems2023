@@ -26,22 +26,24 @@ public class ActionsForWorkers extends Thread{
 
     @Override
     public void run(){
-        while(Master.getChunks().isEmpty()){System.out.println("Waiting for chunk");}
-        System.out.println("Preparing to send chunk");
-
-        Chunk c = master.fetchChunk();
-
+        System.out.println("Worker is ready for Chunk");
+        while(!master.readyChunk()){/*Block the connection*/}
+        System.out.println("Acquired Chunk");
+        Chunk toSend = master.fetchChunk();
         try{
-            out.writeObject(c);
+            out.writeObject(toSend);
             out.flush();
-        }catch(IOException exc){
-            exc.printStackTrace();
+
+            System.out.println("Chunk sent");
+
+
+            Double[] results = (Double[]) in.readObject();
+            for(double d : results){System.out.println(d);}
+
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
-
-        /*waiting for input in order to reduce*/
-
     }
-
 
 
 

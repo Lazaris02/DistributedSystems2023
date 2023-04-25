@@ -1,20 +1,23 @@
+import java.io.BufferedReader;
 import java.io.Serializable;
+import java.nio.Buffer;
 import java.util.ArrayList;
 
 
 public class Chunk implements Serializable {
 
-    private int size;
+
     private ArrayList<String[]> data;
-    public Chunk(int size) {
-        this.size = size;
-        data = new ArrayList<String[]>();
+    public Chunk() {
+        data = new ArrayList<>();
     }
     public ArrayList<String[]> getData(){return this.data;}
 
     public void addData(String[] key_value){
+        if(data == null){data = new ArrayList<>();}
         data.add(key_value);
     }
 
+    public void empty_data(){data.clear();}
 
 }
