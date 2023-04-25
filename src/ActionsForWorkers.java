@@ -30,6 +30,7 @@ public class ActionsForWorkers extends Thread{
         while(!master.readyChunk()){/*Block the connection*/}
         System.out.println("Acquired Chunk");
         Chunk toSend = master.fetchChunk();
+
         try{
             out.writeObject(toSend);
             out.flush();

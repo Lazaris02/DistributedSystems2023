@@ -22,8 +22,10 @@ public class ActionsForClients extends Thread {
     } // Constructor
 
     /* getters */
-   private static synchronized int getGpxId(){
-       return id++;
+   private synchronized String getGpxId(){
+       id++;
+
+       return String.valueOf(id);
    }
 
     /*Functions used in run*/
@@ -53,7 +55,7 @@ public class ActionsForClients extends Thread {
             String line = file.readLine(); // second line contains the creator
 
             String creator = getCreator(line);// should return user1 f.e
-            String gpxId = Integer.toString(getGpxId()); // we also need an id for the gpx file
+            String gpxId = getGpxId(); // we also need an id for the gpx file
 
             String[] key = {gpxId,creator};
 
