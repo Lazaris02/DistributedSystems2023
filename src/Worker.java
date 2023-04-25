@@ -47,10 +47,15 @@ public class Worker extends Thread {
 
             waypoints=extractChunk(chunk);
 
+            String gpx_id = Integer.toString(1);
+            String creator ="creator";
+
+
             for(String[] s : waypoints){
                 System.out.println(Arrays.toString(s));
             }
             System.out.println("-------");
+
             double lat1= getStartLat(waypoints);
             double lat2=getFinalLat(waypoints);
             double lon1=getStartLon(waypoints);
@@ -71,9 +76,11 @@ public class Worker extends Thread {
             if(elevationlist.size()>1){elevation=getTotElevation(elevationlist);}
             else elevation=0;
 
-            Double[] results ={totalDis,totalTi,avSpeed,elevation};
+            String[] results = {gpx_id,creator,Double.toString(totalDis),Double.toString(totalTi),
+                    Double.toString(avSpeed),Double.toString(elevation)};
 
-            System.out.println(results[1]); /*TODO here prints*/
+
+            System.out.println(results[2]); /*TODO here prints*/
 
             out.writeObject(results);
             out.flush();
@@ -101,27 +108,35 @@ public class Worker extends Thread {
     private static double getStartLat(ArrayList<String[]> waypoints){
         return Double.parseDouble(waypoints.get(0)[1]);
     }
+
     private static double getStartLon(ArrayList<String[]> waypoints){
         return Double.parseDouble(waypoints.get(0)[2]);
     }
+
     private static double getFinalLat(ArrayList<String[]> waypoints){
         return Double.parseDouble(waypoints.get(waypoints.size()-1)[1]);
     }
+
     private static double getFinalLon(ArrayList<String[]> waypoints){
         return Double.parseDouble(waypoints.get(waypoints.size()-1)[2]);
     }
+
     private static double getStartEle(ArrayList<String[]> waypoints){
         return Double.parseDouble(waypoints.get(0)[3]);
     }
+
     private static double getFinalEle(ArrayList<String[]> waypoints){
         return Double.parseDouble(waypoints.get(waypoints.size()-1)[3]);
     }
+
     private static LocalDateTime getStartTime(ArrayList<String[]> waypoints){
         return LocalDateTime.parse(waypoints.get(0)[4].substring(0,waypoints.get(0)[4].length()-1));
     }
+
     private static LocalDateTime getFinalTime(ArrayList<String[]> waypoints){
         return LocalDateTime.parse(waypoints.get(waypoints.size()-1)[4].substring(0,waypoints.get(waypoints.size()-1)[4].length()-1));
     }
+
     private List<Double> getElevations(ArrayList<String[]> waypoints) {
         List<Double> ele=new ArrayList<>();
         for(String[] w:waypoints){
@@ -129,6 +144,7 @@ public class Worker extends Thread {
         }
         return ele;
     }
+
     private static double distance(double lat1, double lat2, double lon1,
                                   double lon2, double el1, double el2) {
 

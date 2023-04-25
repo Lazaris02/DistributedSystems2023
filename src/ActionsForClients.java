@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class ActionsForClients extends Thread {
     /* This class is used to perform the actions the app clients ask for */
@@ -8,21 +10,24 @@ public class ActionsForClients extends Thread {
     private Master master; /*The thread needs to know the master thread it belongs so that master
                             can send the mapped pairs to the workers*/
 
+    private static int id =0;
+
     public ActionsForClients(Socket connection, Master master){
         try{
             in = new ObjectInputStream(connection.getInputStream());
             out = new ObjectOutputStream(connection.getOutputStream());
             this.master = master;
+
         }catch(IOException exc){exc.printStackTrace();}
     } // Constructor
 
     /* getters */
-    public ObjectInputStream getIn(){return in;}
-
-    public ObjectOutputStream getOut(){return out;}
+   private static synchronized int getGpxId(){
+       return id++;
+   }
 
     /*Functions used in run*/
-    private String getClientId(String line){
+    private String getCreator(String line){
         /*gets the "creator of the string"*/
         String[] words = line.split("creator=");
         return words[1].split("\"")[1];
@@ -46,12 +51,17 @@ public class ActionsForClients extends Thread {
 
             file.readLine(); // first line is useless
             String line = file.readLine(); // second line contains the creator
-            String id = getClientId(line); // should return user1 f.e
+
+            String creator = getCreator(line);// should return user1 f.e
+            String gpxId = Integer.toString(getGpxId()); // we also need an id for the gpx file
+
+            String[] key = {gpxId,creator};
 
             /*Split into waypoints -- every waypoint is within <wpt> </wpt>
              */
 
             String [] waypoint_lines = new String[4];
+
             boolean last_waypoint = false;
 
             line = file.readLine();
@@ -69,7 +79,7 @@ public class ActionsForClients extends Thread {
 
                 /* pass ID and a WAYPOINT to the map function of master*/
 
-                master.map(id,waypoint_lines,last_waypoint);
+                master.map(key,waypoint_lines,last_waypoint);
             }
 
         }catch (IOException exc){

@@ -37,8 +37,8 @@ public class ActionsForWorkers extends Thread{
             System.out.println("Chunk sent");
 
 
-            Double[] results = (Double[]) in.readObject();
-            for(double d : results){System.out.println(d);}
+            String[] results = (String[])  in.readObject();
+            for(String s : results){System.out.println(s);}
 
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
