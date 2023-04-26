@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class ActionsForWorkers extends Thread{
@@ -26,16 +27,15 @@ public class ActionsForWorkers extends Thread{
 
     @Override
     public void run(){
-        System.out.println("Worker is ready for Chunk");
+
         while(!master.readyChunk()){/*Block the connection*/}
-        System.out.println("Acquired Chunk");
         Chunk toSend = master.fetchChunk();
+        if(toSend == null){System.out.println("ton exete piei");}
+        for(String[] s : toSend.getData()){System.out.println(Arrays.toString(s));}
 
         try{
             out.writeObject(toSend);
             out.flush();
-
-            System.out.println("Chunk sent");
 
 
             String[] results = (String[])  in.readObject();

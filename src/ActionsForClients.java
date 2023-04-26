@@ -77,7 +77,11 @@ public class ActionsForClients extends Thread {
                     i++;
                 }
                 line = file.readLine();
-                if(line.contains("</gpx>")){last_waypoint = true;}
+                if(line.contains("</gpx>")){
+                    last_waypoint = true;
+                    System.out.println("LW "+line);
+                    for(String s : waypoint_lines){System.out.println(s);}
+                }
 
                 /* pass ID and a WAYPOINT to the map function of master*/
 
