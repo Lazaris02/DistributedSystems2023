@@ -38,7 +38,10 @@ public class Master extends Thread implements Server {
 
     /*Map function*/
 
-    public void map(String key, String[] waypoint_lines,boolean last_waypoint){
+    public void map(String[] key, String[] waypoint_lines,boolean last_waypoint){
+
+        /*key[0]--> gpx_id
+        *key[1]-->creator*/
 
         /*extracts the parameters*/
 
@@ -46,14 +49,19 @@ public class Master extends Thread implements Server {
         String lon = extractLon(waypoint_lines[0]);
         String ele = extractEle(waypoint_lines[1]);
         String time = extractTime(waypoint_lines[2]);
+        String gpx_id = String.valueOf(key[0]);
+        String creator = String.valueOf(key[1]);
 
         /*Creates the array*/
 
-        String [] key_values = {key,lat,lon,ele,time}; /*TODO checked till here*/
-        /*TODO This part needs synchronize altogether*/
-        addToChunk(key,key_values); /*adds to chunk also checks if chunk is ready*/
-        addToReadyChunks(key,last_waypoint);
+        String [] key_values = {gpx_id,lat,lon,ele,time,creator}; /*TODO works until here*/
 
+        /*TODO This part needs synchronize altogether*/
+
+        System.out.println(gpx_id+" "+creator);
+
+        addToChunk(key[0],key_values); /*adds to chunk also checks if chunk is ready*/
+        addToReadyChunks(key[0],last_waypoint);
 
     }
 
@@ -99,7 +107,7 @@ public class Master extends Thread implements Server {
         /*adds a chunk to the ready queue -- removes it from hashmap
          if it is ready*/
 
-        if(chunks.get(key).getData().size() == chunk_size || last_waypoint) { /**/
+        if(chunks.get(key).getData().size() == chunk_size) { /*TODO check this condition*/
             System.out.println("Adding chunk to queue");
             readyChunks.add(chunks.get(key));
             chunks.get(key).empty_data();
