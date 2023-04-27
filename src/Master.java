@@ -112,7 +112,6 @@ public class Master extends Thread implements Server {
             readyChunks.add(new Chunk(chunks.get(key))); /*Deep copy the chunk*/
             chunks.remove(key);
         }
-        System.out.println(last_waypoint);
         if(last_waypoint){printQueue();}
     }
     public synchronized boolean readyQueueEmpty(){return readyChunks.isEmpty();}

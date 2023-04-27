@@ -28,7 +28,9 @@ public class ActionsForWorkers extends Thread{
     @Override
     public void run(){
 
-        while(master.readyQueueEmpty()){System.out.println(master.readyQueueEmpty());}
+        System.out.println("Hi from Thread"+ Thread.currentThread().getName());
+
+        while(master.readyQueueEmpty()){/*Blocks connection*/}
         Chunk toSend = master.fetchChunk();
 
         try{
