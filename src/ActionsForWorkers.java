@@ -19,11 +19,6 @@ public class ActionsForWorkers extends Thread{
     } // Constructor
 
 
-    /* getters */
-
-    public ObjectInputStream getIn(){return in;}
-    public ObjectOutputStream getOut(){return out;}
-
 
     @Override
     public void run(){
@@ -40,7 +35,6 @@ public class ActionsForWorkers extends Thread{
 
             String[] results = (String[])  in.readObject();
 
-            for(String s : results){System.out.println(s);}
 
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);

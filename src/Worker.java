@@ -204,9 +204,6 @@ public class Worker extends Thread {
                 worker_thread_2.start();
             }
         }
-
-
-
     }
 
 }

@@ -24,7 +24,8 @@ public class Master extends Thread implements Server {
     private static HashMap<String,Chunk> chunks;
     private static LinkedList<Chunk> readyChunks; /*TODO careful with static collections*/
 
-
+    /*Getters*/
+    public int getChunk_size(){return chunk_size;}
 
     /* Constructor */
 
@@ -55,10 +56,7 @@ public class Master extends Thread implements Server {
 
         /*Creates the array*/
 
-        String [] key_values = {gpx_id,lat,lon,ele,time,creator}; /*TODO works until here*/
-
-        /*TODO This part needs synchronize altogether*/
-
+        String [] key_values = {gpx_id,lat,lon,ele,time,creator};
 
         addToChunk(key[0],key_values,last_waypoint); /*adds to chunk also checks if chunk is ready*/
 
@@ -68,16 +66,16 @@ public class Master extends Thread implements Server {
     /*Helper functions for map*/
 
     private String extractLat(String line){
-        String[] find_lat_log = line.split("lon"); /*something like "lat_num" ... >*/
-        String lat = find_lat_log[0].split("lat=\"")[1];
+        String[] find_lat_lon = line.split("lon");
+        String lat = find_lat_lon[0].split("lat=\"")[1];
         lat = lat.substring(0,lat.length()-2); /*gets lat*/
         return lat;
     }
 
-    private String extractLon(String line){
-        String[] find_lat_log = line.split("lon"); /*something like "lat_num" ... >*/
-        String lon = find_lat_log[1].split("\"")[1];
-        lon = lon.substring(0,lon.length()-2); /*gets lat*/
+    private String extractLon(String line){ /*TODO needs checking*/
+        String[] find_lat_lon = line.split("lon");
+        String lon = find_lat_lon[1].split("\"")[1];
+        lon = lon.substring(0,lon.length()-2); /*gets lon*/
         return lon;
     }
 
@@ -105,19 +103,39 @@ public class Master extends Thread implements Server {
     }
 
     private  void addToReadyChunks(String key, boolean last_waypoint){
+
         /*adds a chunk to the ready queue -- removes it from hashmap
          if it is ready*/
 
-        if(chunks.get(key).getData().size() == chunk_size || last_waypoint) { /*TODO check this condition*/
+        if(chunks.get(key).getData().size() == chunk_size || last_waypoint) {
+            for(String[] s : chunks.get(key).getData()){System.out.println(Arrays.toString(s));} /*TODO delete this*/
+            System.out.println("--------------------------------------------------------------------------------");
             readyChunks.add(new Chunk(chunks.get(key))); /*Deep copy the chunk*/
             chunks.remove(key);
         }
-        if(last_waypoint){printQueue();}
+//        if(last_waypoint){printQueue();}
     }
     public synchronized boolean readyQueueEmpty(){return readyChunks.isEmpty();}
 
     public synchronized Chunk fetchChunk(){
         return readyChunks.remove();
+    }
+
+    /*Reduce function*/
+    public String[] reduce(String [][] results){
+        double totalDist=0;
+        double totalTime=0;
+        double avSpeed;
+        double totalElevation=0;
+        for (String[] res:results){
+            totalDist+=Double.parseDouble(res[2]);
+            totalElevation+=Double.parseDouble(res[5]);
+            totalTime += Double.parseDouble(res[3]);
+        }
+        avSpeed=totalDist/totalTime; //m/s
+        avSpeed=3.6*avSpeed; //km/h
+        return new String[]{Double.toString(totalDist),Double.toString(totalTime),
+                Double.toString(avSpeed),Double.toString(totalElevation)};
     }
 
     private void printQueue(){

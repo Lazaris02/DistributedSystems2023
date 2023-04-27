@@ -64,23 +64,38 @@ public class ActionsForClients extends Thread {
 
             String [] waypoint_lines = new String[4];
 
-            boolean last_waypoint = false;
+            /*The last waypoint of the chunk must also be the first to not lose part of the distance
+            * */
 
+            int chunk_size = master.getChunk_size();
+            int chunk_counter = 0;
+
+            boolean last_waypoint = false;
             line = file.readLine();
+
+
             while(!line.contains("</gpx>")){
+
                 int i =0;
                 while(!line.contains("</wpt>")){
                     if(i!=0)
                         line = file.readLine();
                     waypoint_lines[i] = line;
                     i++;
-                }
+                } /*Creates the waypoint*/
+
+
                 line = file.readLine();
-                if(line.contains("</gpx>")){last_waypoint = true;}
+                if(line.contains("</gpx>")){last_waypoint = true;} /*Checks if it is the last one*/
 
-                /* pass ID and a WAYPOINT to the map function of master*/
+                master.map(key,waypoint_lines,last_waypoint); /*send the waypoint for mapping*/
 
-                master.map(key,waypoint_lines,last_waypoint);
+                chunk_counter++;
+                if(chunk_counter == chunk_size){
+                    master.map(key.clone(),waypoint_lines.clone(),last_waypoint);
+                    chunk_counter =1;
+                }
+
             }
 
         }catch (IOException exc){
