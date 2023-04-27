@@ -47,14 +47,16 @@ public class Worker extends Thread {
 
             waypoints=extractChunk(chunk);
 
-            String gpx_id = Integer.toString(1);
-            String creator ="creator";
+                /*In each chunk I have the same creator and gpx id*/
+
+            String gpx_id =waypoints.get(0)[0];
+            String creator =waypoints.get(0)[0];
 
 
             for(String[] s : waypoints){
-                System.out.println(Arrays.toString(s));
+                System.out.println(Arrays.toString(s) +Thread.currentThread().getName());
             }
-            System.out.println("-------");
+
 
             double lat1= getStartLat(waypoints);
             double lat2=getFinalLat(waypoints);

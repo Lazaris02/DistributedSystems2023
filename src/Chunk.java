@@ -11,6 +11,13 @@ public class Chunk implements Serializable {
     public Chunk() {
         data = new ArrayList<>();
     }
+
+    public Chunk(Chunk c){
+        this.data = new ArrayList<>();
+        this.data.addAll(c.getData());
+    } /*Copy constructor*/
+
+
     public ArrayList<String[]> getData(){return this.data;}
 
     public void addData(String[] key_value){

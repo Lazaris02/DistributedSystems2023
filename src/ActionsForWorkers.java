@@ -28,10 +28,8 @@ public class ActionsForWorkers extends Thread{
     @Override
     public void run(){
 
-        while(!master.readyChunk()){/*Block the connection*/}
+        while(master.readyQueueEmpty()){System.out.println(master.readyQueueEmpty());}
         Chunk toSend = master.fetchChunk();
-        if(toSend == null){System.out.println("ton exete piei");}
-        for(String[] s : toSend.getData()){System.out.println(Arrays.toString(s));}
 
         try{
             out.writeObject(toSend);
@@ -39,6 +37,7 @@ public class ActionsForWorkers extends Thread{
 
 
             String[] results = (String[])  in.readObject();
+
             for(String s : results){System.out.println(s);}
 
         } catch (IOException | ClassNotFoundException e) {

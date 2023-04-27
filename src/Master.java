@@ -109,18 +109,23 @@ public class Master extends Thread implements Server {
          if it is ready*/
 
         if(chunks.get(key).getData().size() == chunk_size || last_waypoint) { /*TODO check this condition*/
-            if(last_waypoint){System.out.println("LAST WAYPOINT");}
-            System.out.println("Adding chunk to queue");
-            readyChunks.add(chunks.get(key));
-            chunks.get(key).empty_data();
+            readyChunks.add(new Chunk(chunks.get(key))); /*Deep copy the chunk*/
+            chunks.remove(key);
         }
+        System.out.println(last_waypoint);
+        if(last_waypoint){printQueue();}
     }
-    public synchronized boolean readyChunk(){return !readyChunks.isEmpty();}
+    public synchronized boolean readyQueueEmpty(){return readyChunks.isEmpty();}
 
     public synchronized Chunk fetchChunk(){
         return readyChunks.remove();
     }
 
+    private void printQueue(){
+        for(Chunk c  : readyChunks){
+            System.out.println(c.getData().size());
+        }
+    } /*TODO delete later*/
 
     /* Server Implementation */
 

@@ -67,8 +67,7 @@ public class ActionsForClients extends Thread {
             boolean last_waypoint = false;
 
             line = file.readLine();
-            while(!line.contains("</gpx>")){ /*TODO this only works for the specific format of the gpx files
-                                                maybe needs to change*/
+            while(!line.contains("</gpx>")){
                 int i =0;
                 while(!line.contains("</wpt>")){
                     if(i!=0)
@@ -77,11 +76,7 @@ public class ActionsForClients extends Thread {
                     i++;
                 }
                 line = file.readLine();
-                if(line.contains("</gpx>")){
-                    last_waypoint = true;
-                    System.out.println("LW "+line);
-                    for(String s : waypoint_lines){System.out.println(s);}
-                }
+                if(line.contains("</gpx>")){last_waypoint = true;}
 
                 /* pass ID and a WAYPOINT to the map function of master*/
 
