@@ -67,8 +67,7 @@ public class ActionsForClients extends Thread {
             boolean last_waypoint = false;
 
             line = file.readLine();
-            while(!line.contains("</gpx>")){ /*TODO this only works for the specific format of the gpx files
-                                                maybe needs to change*/
+            while(!line.contains("</gpx>")){
                 int i =0;
                 while(!line.contains("</wpt>")){
                     if(i!=0)

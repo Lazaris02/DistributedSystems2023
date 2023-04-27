@@ -49,6 +49,7 @@ public class Master extends Thread implements Server {
         String lon = extractLon(waypoint_lines[0]);
         String ele = extractEle(waypoint_lines[1]);
         String time = extractTime(waypoint_lines[2]);
+
         String gpx_id = String.valueOf(key[0]);
         String creator = String.valueOf(key[1]);
 
@@ -58,10 +59,9 @@ public class Master extends Thread implements Server {
 
         /*TODO This part needs synchronize altogether*/
 
-        System.out.println(gpx_id+" "+creator);
 
-        addToChunk(key[0],key_values); /*adds to chunk also checks if chunk is ready*/
-        addToReadyChunks(key[0],last_waypoint);
+        addToChunk(key[0],key_values,last_waypoint); /*adds to chunk also checks if chunk is ready*/
+
 
     }
 
@@ -93,7 +93,7 @@ public class Master extends Thread implements Server {
     /*Chunk Scheduling and Manipulation*/
 
 
-    private synchronized void addToChunk(String key, String[] key_values){
+    private synchronized void addToChunk(String key, String[] key_values,boolean last_waypoint){
         if(chunks.containsKey(key)){
             chunks.get(key).addData(key_values); /*check for ready here as well*/
         }else{
@@ -101,24 +101,31 @@ public class Master extends Thread implements Server {
             c.addData(key_values);
             chunks.put(key,c);
         }
+        addToReadyChunks(key,last_waypoint);
     }
 
-    private  synchronized void addToReadyChunks(String key, boolean last_waypoint){
+    private  void addToReadyChunks(String key, boolean last_waypoint){
         /*adds a chunk to the ready queue -- removes it from hashmap
          if it is ready*/
 
-        if(chunks.get(key).getData().size() == chunk_size) { /*TODO check this condition*/
-            System.out.println("Adding chunk to queue");
-            readyChunks.add(chunks.get(key));
-            chunks.get(key).empty_data();
+        if(chunks.get(key).getData().size() == chunk_size || last_waypoint) { /*TODO check this condition*/
+            readyChunks.add(new Chunk(chunks.get(key))); /*Deep copy the chunk*/
+            chunks.remove(key);
         }
+        System.out.println(last_waypoint);
+        if(last_waypoint){printQueue();}
     }
-    public synchronized boolean readyChunk(){return !readyChunks.isEmpty();}
+    public synchronized boolean readyQueueEmpty(){return readyChunks.isEmpty();}
 
     public synchronized Chunk fetchChunk(){
         return readyChunks.remove();
     }
 
+    private void printQueue(){
+        for(Chunk c  : readyChunks){
+            System.out.println(c.getData().size());
+        }
+    } /*TODO delete later*/
 
     /* Server Implementation */
 
