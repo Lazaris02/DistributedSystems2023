@@ -72,10 +72,10 @@ public class Master extends Thread implements Server {
         return lat;
     }
 
-    private String extractLon(String line){ /*TODO needs checking*/
+    private String extractLon(String line){
         String[] find_lat_lon = line.split("lon");
         String lon = find_lat_lon[1].split("\"")[1];
-        lon = lon.substring(0,lon.length()-2); /*gets lon*/
+        lon = lon.substring(0,lon.length()); /*gets lon*/
         return lon;
     }
 
@@ -108,16 +108,14 @@ public class Master extends Thread implements Server {
          if it is ready*/
 
         if(chunks.get(key).getData().size() == chunk_size || last_waypoint) {
-            for(String[] s : chunks.get(key).getData()){System.out.println(Arrays.toString(s));} /*TODO delete this*/
-            System.out.println("--------------------------------------------------------------------------------");
             readyChunks.add(new Chunk(chunks.get(key))); /*Deep copy the chunk*/
             chunks.remove(key);
         }
-//        if(last_waypoint){printQueue();}
     }
     public synchronized boolean readyQueueEmpty(){return readyChunks.isEmpty();}
 
     public synchronized Chunk fetchChunk(){
+        System.out.println(Thread.currentThread().getName()+" fetching chunk");
         return readyChunks.remove();
     }
 
@@ -127,6 +125,7 @@ public class Master extends Thread implements Server {
         double totalTime=0;
         double avSpeed;
         double totalElevation=0;
+
         for (String[] res:results){
             totalDist+=Double.parseDouble(res[2]);
             totalElevation+=Double.parseDouble(res[5]);
@@ -140,7 +139,7 @@ public class Master extends Thread implements Server {
 
     private void printQueue(){
         for(Chunk c  : readyChunks){
-            System.out.println(c.getData().size());
+            System.out.println(Arrays.toString(c.getData().get(0)));
         }
     } /*TODO delete later*/
 
