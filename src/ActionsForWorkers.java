@@ -24,18 +24,16 @@ public class ActionsForWorkers extends Thread{
     public void run(){
 
         System.out.println("Hi from "+ Thread.currentThread().getName());
+        Chunk toSend;
 
-        while(master.readyQueueEmpty()){/*Blocks connection*/}
+        while((toSend = master.fetchChunk()) == null){/*Blocks connection*/}
         System.out.println(Thread.currentThread().getName()+"sending");
-        Chunk toSend = master.fetchChunk();
 
         try{
             out.writeObject(toSend);
             out.flush();
 
-
             String[] results = (String[])  in.readObject();
-
 
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
