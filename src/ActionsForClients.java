@@ -1,7 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Random;
 
 public class ActionsForClients extends Thread {
     /* This class is used to perform the actions the app clients ask for */
@@ -21,11 +19,9 @@ public class ActionsForClients extends Thread {
         }catch(IOException exc){exc.printStackTrace();}
     } // Constructor
 
-    /* getters */
-   private synchronized String getGpxId(){
-       id++;
-
-       return String.valueOf(id);
+    /* Getters */
+   private static synchronized String createGpxId(){
+       return String.valueOf(++id);
    }
 
     /*Functions used in run*/
@@ -55,7 +51,7 @@ public class ActionsForClients extends Thread {
             String line = file.readLine(); // second line contains the creator
 
             String creator = getCreator(line);// should return user1 f.e
-            String gpxId = getGpxId(); // we also need an id for the gpx file
+            String gpxId = createGpxId(); // we also need an id for the gpx file
 
             String[] key = {gpxId,creator};
 
@@ -97,6 +93,8 @@ public class ActionsForClients extends Thread {
                 }
 
             }
+
+            /*Takes the reduced results and sends them back*/
 
         }catch (IOException exc){
             exc.printStackTrace();

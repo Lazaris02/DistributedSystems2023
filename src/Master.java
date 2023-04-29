@@ -21,18 +21,90 @@ public class Master extends Thread implements Server {
     private static Socket client_provider, worker_provider;
 
     /*Collections*/
-    private static HashMap<String,Chunk> chunks;
-    private static LinkedList<Chunk> readyChunks; /*TODO careful with static collections*/
 
-    /*Getters*/
-    public int getChunk_size(){return chunk_size;}
+    private static HashMap<String,Chunk> chunks;
+    private static LinkedList<Chunk> readyChunks;
+
+    private static HashMap<String,Integer[]> gpxCounter;
+    private static HashMap <String,Integer> readyForReduce;
+
 
     /* Constructor */
 
     public Master(int port){
         this.port = port;
-        if(this.port == client_port){chunks = new HashMap<>();}
-        if(this.port == worker_port){readyChunks=new LinkedList<>();}
+        if(this.port == client_port){
+            chunks = new HashMap<>();
+            gpxCounter = new HashMap<>();
+        }
+        if(this.port == worker_port){
+            readyChunks = new LinkedList<>();
+            readyForReduce = new HashMap<>();
+        }
+    }
+
+
+
+
+    /*Getters -- Setters*/
+    public int getChunk_size(){return chunk_size;}
+
+
+    /*increases the number of chunks for the given gpx*/
+    public static void increaseChunkNumber(String gpx_id){
+        if(!gpxCounter.containsKey(gpx_id)){
+            gpxCounter.put(gpx_id,new Integer[]{1,0});
+        }else{
+           Integer[] toChange = gpxCounter.get(gpx_id);
+           toChange[0]++;
+           gpxCounter.put(gpx_id,toChange); /*TODO might need cloning*/
+        }
+    }
+
+
+
+    /*locks the chunk number for each gpx*/
+    public static void lockValue(String key)
+    {
+       Integer[] toChange = gpxCounter.get(key); /*is clone needed here? TODO*/
+       toChange[1] = 1;
+       gpxCounter.put(key,toChange);
+    } /*TODO does this work?*/
+
+
+
+    /*returns the chunk number for the gpx we request*/
+    private static int getGpxCounterValue(String gpx_id){ return gpxCounter.get(gpx_id)[0];}
+
+
+    /*checks if the gpx_counter is ready to be used -- indicates that the whole gpx has been chunked*/
+    private static boolean gpxCounterReady(String gpx_id){return gpxCounter.get(gpx_id)[1] == 1;}
+
+
+
+    private static int getReduceCounter(String gpx_id){return readyForReduce.get(gpx_id);}
+
+
+
+    /*increases the reduced chunk number for a specific gpx*/
+    public static synchronized void chunkMapped(String gpx_id){
+        if(!readyForReduce.containsKey(gpx_id)){
+            readyForReduce.put(gpx_id,1);
+        }else{
+            int value = readyForReduce.get(gpx_id);
+            readyForReduce.put(gpx_id,++value);
+        }
+    }
+
+
+
+
+    /*checks if a gpx is ready to be reduced*/
+    public static synchronized boolean startReduce(String gpx_id){
+       if(gpxCounterReady(gpx_id) && (getGpxCounterValue(gpx_id) == getReduceCounter(gpx_id))){
+            System.out.println(gpx_id+" "+getGpxCounterValue(gpx_id)+" "+getReduceCounter(gpx_id));
+       }
+       return (gpxCounterReady(gpx_id) && (getGpxCounterValue(gpx_id) == getReduceCounter(gpx_id)));
     }
 
 
@@ -60,7 +132,6 @@ public class Master extends Thread implements Server {
 
         addToChunk(key[0],key_values,last_waypoint); /*adds to chunk also checks if chunk is ready*/
 
-
     }
 
     /*Helper functions for map*/
@@ -75,7 +146,7 @@ public class Master extends Thread implements Server {
     private String extractLon(String line){
         String[] find_lat_lon = line.split("lon");
         String lon = find_lat_lon[1].split("\"")[1];
-        lon = lon.substring(0,lon.length()); /*gets lon*/
+        lon = lon.substring(0,lon.length()); /*gets lon*/ /*TODO check if this is redundant*/
         return lon;
     }
 
@@ -108,6 +179,10 @@ public class Master extends Thread implements Server {
          if it is ready*/
 
         if(chunks.get(key).getData().size() == chunk_size || last_waypoint) {
+
+            increaseChunkNumber(key);
+            if(last_waypoint){lockValue(key);} /*for reduce function*/
+
             readyChunks.add(new Chunk(chunks.get(key))); /*Deep copy the chunk*/
             chunks.remove(key);
         }
@@ -115,7 +190,6 @@ public class Master extends Thread implements Server {
 
     public synchronized Chunk fetchChunk(){
         if(readyChunks.isEmpty()){return null;}
-        System.out.println(Thread.currentThread().getName()+" fetching chunk");
         return readyChunks.remove();
     }
 
