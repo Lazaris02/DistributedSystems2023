@@ -52,9 +52,7 @@ public class Worker extends Thread {
             String creator =waypoints.get(0)[0];
 
 
-            for(String[] s : waypoints){
-                System.out.println(Arrays.toString(s) +Thread.currentThread().getName());
-            }
+
 
 
             double lat1= getStartLat(waypoints);
@@ -80,8 +78,6 @@ public class Worker extends Thread {
             String[] results = {gpx_id,creator,Double.toString(totalDis),Double.toString(totalTi),
                     Double.toString(avSpeed),Double.toString(elevation)};
 
-
-            System.out.println(results[2]); /*TODO here prints*/
 
             out.writeObject(results);
             out.flush();
@@ -191,10 +187,12 @@ public class Worker extends Thread {
 
         Worker worker_thread_1 = new Worker(thread_1_id);
         Worker worker_thread_2 = new Worker(thread_2_id);
+
         worker_thread_1.start();
         worker_thread_2.start();
 
         while(true){
+
             if(!worker_thread_1.isAlive()){
                 worker_thread_1 = new Worker((int)(Math.random()+1000));
                 worker_thread_1.start();
@@ -203,6 +201,7 @@ public class Worker extends Thread {
                 worker_thread_2 = new Worker((int)(Math.random()+1000));
                 worker_thread_2.start();
             }
+
         }
     }
 

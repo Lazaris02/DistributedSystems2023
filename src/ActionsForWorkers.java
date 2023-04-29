@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.*;
-import java.util.Arrays;
-import java.util.HashMap;
+
 
 public class ActionsForWorkers extends Thread{
     /* This class is used to perform the actions the workers ask for */
@@ -23,17 +22,19 @@ public class ActionsForWorkers extends Thread{
     @Override
     public void run(){
 
-        System.out.println("Hi from "+ Thread.currentThread().getName());
+//        System.out.println("Hi from "+ Thread.currentThread().getName());
         Chunk toSend;
 
-        while((toSend = master.fetchChunk()) == null){/*Blocks connection*/}
-        System.out.println(Thread.currentThread().getName()+"sending");
-
         try{
+            while((toSend = master.fetchChunk()) == null){/*Blocks connection*/}
             out.writeObject(toSend);
             out.flush();
 
             String[] results = (String[])  in.readObject();
+            /*results[0] -----> gpx_id*/
+
+            Master.chunkMapped(results[0]);
+            if(Master.startReduce(results[0])){System.out.println("Start Reducing gpx "+results[0]);}
 
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);

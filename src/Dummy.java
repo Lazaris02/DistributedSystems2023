@@ -32,7 +32,7 @@ public class Dummy extends Thread{
             out.flush();
 
             /*AWAITS FOR THE RESULTS FROM MASTER
-            * READS IT IN SOME KIND OF LIST*/
+            * READS IT IN SOME KIND OF LIST + PRINTS OR STORES THEM*/
 //            ArrayList<String> results = (ArrayList<String>) in.readObject();
 
         } catch (UnknownHostException unknownHost) {
