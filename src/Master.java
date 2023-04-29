@@ -112,9 +112,9 @@ public class Master extends Thread implements Server {
             chunks.remove(key);
         }
     }
-    public synchronized boolean readyQueueEmpty(){return readyChunks.isEmpty();}
 
     public synchronized Chunk fetchChunk(){
+        if(readyChunks.isEmpty()){return null;}
         System.out.println(Thread.currentThread().getName()+" fetching chunk");
         return readyChunks.remove();
     }
