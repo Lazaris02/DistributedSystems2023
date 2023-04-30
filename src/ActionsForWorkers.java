@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 
 
 public class ActionsForWorkers extends Thread{
@@ -26,11 +27,13 @@ public class ActionsForWorkers extends Thread{
         Chunk toSend;
 
         try{
-            while((toSend = master.fetchChunk()) == null){/*Blocks connection*/}
+            while ((toSend = master.fetchChunk()) == null) {/*Blocks connection*/}
+
             out.writeObject(toSend);
             out.flush();
 
             String[] results = (String[])  in.readObject();
+
             /*results[0] -----> gpx_id*/
 
             Master.chunkMapped(results[0]);

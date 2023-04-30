@@ -5,7 +5,7 @@ public class ActionsForClients extends Thread {
     /* This class is used to perform the actions the app clients ask for */
     private ObjectInputStream in;
     private ObjectOutputStream out;
-    private Master master; /*The thread needs to know the master thread it belongs so that master
+    private Master master; /*The thread needs to know the master thread it belongs to so that master
                             can send the mapped pairs to the workers*/
 
     private static int id =0;
@@ -60,8 +60,7 @@ public class ActionsForClients extends Thread {
 
             String [] waypoint_lines = new String[4];
 
-            /*The last waypoint of the chunk must also be the first to not lose part of the distance
-            * */
+            /*The last waypoint of the chunk must also be the first to not lose part of the distance*/
 
             int chunk_size = master.getChunk_size();
             int chunk_counter = 0;
