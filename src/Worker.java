@@ -35,6 +35,7 @@ public class Worker extends Thread {
         try {
             String host = "localhost";
             /* Create socket for contacting the server on worker port*/
+
             requestSocket = new Socket(host, this.port);
 
             /* Create the streams to send and receive data from server */
@@ -46,12 +47,12 @@ public class Worker extends Thread {
 
             waypoints=extractChunk(chunk);
 
+            for(String[] s : waypoints){System.out.println(Arrays.toString(s)+" "+ Thread.currentThread().getName());}
+
                 /*In each chunk I have the same creator and gpx id*/
 
             String gpx_id =waypoints.get(0)[0];
-            String creator =waypoints.get(0)[0];
-
-
+            String creator =waypoints.get(0)[5];
 
 
 
