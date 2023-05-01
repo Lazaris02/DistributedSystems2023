@@ -125,6 +125,13 @@ public class Master extends Thread implements Server {
 
     private static int getReduceCounter(String gpx_id){return readyForReduce.get(gpx_id);}
 
+    public static String[] getCustRes(String id){
+        return customer_results.get(id);
+    }
+    public String[] getStats() {
+        return stats;
+    }
+
 
 
     /*increases the reduced chunk number for a specific gpx*/
@@ -146,9 +153,7 @@ public class Master extends Thread implements Server {
     * 2. The num of  total chunks of the specific gpx == The num of Reduced chunks of the specific gpx*/
 
     public static synchronized boolean startReduce(String gpx_id){
-       if(gpxCounterReady(gpx_id) && (getGpxCounterValue(gpx_id) == getReduceCounter(gpx_id))){
-            System.out.println(gpx_id+" "+getGpxCounterValue(gpx_id)+" "+getReduceCounter(gpx_id));
-       }
+
        return (gpxCounterReady(gpx_id) && (getGpxCounterValue(gpx_id) == getReduceCounter(gpx_id)));
     }
 
@@ -293,7 +298,7 @@ public class Master extends Thread implements Server {
 
     private synchronized void put_cust_results(String client_id,String[] res){
         customer_results.put(client_id,res);
-        System.out.println("Added customer "+client_id);
+
     }
 
 
@@ -313,11 +318,7 @@ public class Master extends Thread implements Server {
                 Double.toString(avspeed),Double.toString(elevation)};
     }
 
-    private void printQueue(){
-        for(Chunk c  : readyChunks){
-            System.out.println(Arrays.toString(c.getData().get(0)));
-        }
-    } /*TODO delete later*/
+
 
 
 
@@ -399,7 +400,7 @@ public class Master extends Thread implements Server {
 
         num_of_workers = Integer.parseInt(args[0]);
 
-        System.out.println("Master worker number: "+num_of_workers);
+
 
         Thread m_client = new Master(client_port); /*Handles the clients*/
 
@@ -409,6 +410,8 @@ public class Master extends Thread implements Server {
         m_worker.start();
         
     }
+
+
 }
 
 

@@ -47,7 +47,7 @@ public class Worker extends Thread {
 
             waypoints=extractChunk(chunk);
 
-            for(String[] s : waypoints){System.out.println(Arrays.toString(s)+" "+ Thread.currentThread().getName());}
+
 
                 /*In each chunk I have the same creator and gpx id*/
 
