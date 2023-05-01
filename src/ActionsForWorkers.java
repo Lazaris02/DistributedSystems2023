@@ -37,7 +37,9 @@ public class ActionsForWorkers extends Thread{
             /*results[0] -----> gpx_id*/
 
             Master.chunkMapped(results[0]);
-            if(Master.startReduce(results[0])){System.out.println("Start Reducing gpx "+results[0]);}
+            master.addResult(results[0],results);
+
+            if(Master.startReduce(results[0])){master.reduce(results[0]);}
 
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);

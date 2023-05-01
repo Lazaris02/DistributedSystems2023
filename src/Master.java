@@ -44,6 +44,14 @@ public class Master extends Thread implements Server {
     private static HashMap <String,Integer> readyForReduce;
 
 
+
+    /*These collections are used in the reduce process*/
+
+    private static HashMap <String,ArrayList<String[]>> total_results=new HashMap<>();
+    private static HashMap <String,String[]> customer_results=new HashMap<>();
+    private static String stats[];
+
+
     /* Constructor */
 
     public Master(int port){
@@ -245,25 +253,65 @@ public class Master extends Thread implements Server {
 
 
     /*Reduce Function*/
-    public String[] reduce(String [][] results){
+    public void reduce(String id){
         double totalDist=0;
         double totalTime=0;
         double avSpeed;
         double totalElevation=0;
 
-        for (String[] res:results){
+        for (String[] res:total_results.get(id)){
             totalDist+=Double.parseDouble(res[2]);
             totalElevation+=Double.parseDouble(res[5]);
             totalTime += Double.parseDouble(res[3]);
         }
         avSpeed=totalDist/totalTime; //m/s
         avSpeed=3.6*avSpeed; //km/h
-        return new String[]{Double.toString(totalDist),Double.toString(totalTime),
+        String[] temp=new String[]{Double.toString(totalDist),Double.toString(totalTime),
                 Double.toString(avSpeed),Double.toString(totalElevation)};
+        put_cust_results(id,temp);
+        merge_results(customer_results);
+        System.out.println("Client "+id+": Distance "+customer_results.get(id)[0]+" Total time "+customer_results.get(id)[1]+" Average speed "+customer_results.get(id)[2]+" Total elevation "+customer_results.get(id)[3]);
+        System.out.println("Stats: Distance "+stats[0]+" Total time "+stats[1]+" Average speed "+stats[2]+" Total elevation "+stats[3]);
+        /*TODO print here*/
+
+
     }
 
 
+    public synchronized void addResult(String key,String[] c_result){
+        if(total_results.containsKey(key)){
+            total_results.get(key).add(c_result);
+        }
+        else{
+            ArrayList<String[]> perm=new ArrayList<>();
+            perm.add(c_result);
+            total_results.put(key,perm);
+        }
 
+    }
+
+
+    private synchronized void put_cust_results(String client_id,String[] res){
+        customer_results.put(client_id,res);
+        System.out.println("Added customer "+client_id);
+    }
+
+
+    private synchronized void merge_results(HashMap<String,String[]> results){
+        double dis=0;
+        double time=0;
+        double elevation=0;
+        for(Map.Entry<String,String[]> entry:results.entrySet()){
+            String[] value=entry.getValue();
+            dis+=Double.parseDouble(value[0]);
+            time+=Double.parseDouble(value[1]);
+            elevation+=Double.parseDouble(value[3]);
+        }
+        double avspeed=dis/time;
+        avspeed=3.6*avspeed; //km/h
+        stats=new String[]{Double.toString(dis),Double.toString(time),
+                Double.toString(avspeed),Double.toString(elevation)};
+    }
 
     private void printQueue(){
         for(Chunk c  : readyChunks){
@@ -324,15 +372,15 @@ public class Master extends Thread implements Server {
         if(!worker_ips.contains(ip))
             worker_ips.add(ip);
 
-        workers.get(worker_ips.indexOf(ip)).add(worker_thread); /*TODO check if this actually works*/
+        workers.get(worker_ips.indexOf(ip)).add(worker_thread);
     }
 
 
     private synchronized void startWorkerThread(){ /*TODO try removing synchronized*/
-
         while(workers.get(rrIterator).isEmpty()){/*Blocks if readyQueue is empty*/}
         Thread t = workers.get(rrIterator).remove();
         t.start();
+        if(num_of_workers>=2){rrIterator = (++rrIterator)%num_of_workers;}
     }
 
 
@@ -344,6 +392,7 @@ public class Master extends Thread implements Server {
 
                 /*OPEN THE SERVER*/
     public static void main(String[] args){
+
         /*I am trying to run two separate threads of the server
          *The first thread handles the client requests
          * The second thread handles the worker requests*/
