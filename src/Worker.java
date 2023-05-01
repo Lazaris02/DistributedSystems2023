@@ -172,7 +172,7 @@ public class Worker extends Thread {
     private double getTotElevation(List<Double> elevations) {
         double sum=0;
         for(int i =1;i<elevations.size();i++){
-            if(elevations.get(i)> elevations.get(i - 1)){sum+=elevations.get(i - 1)-elevations.get(i);}
+            if(elevations.get(i)> elevations.get(i - 1)){sum+=elevations.get(i)-elevations.get(i - 1);}
         }
         return sum;
     }

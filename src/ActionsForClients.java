@@ -96,6 +96,7 @@ public class ActionsForClients extends Thread {
 
             /*Takes the reduced results and sends them back*/
 
+
         }catch (IOException exc){
             exc.printStackTrace();
         }catch (ClassNotFoundException exc){

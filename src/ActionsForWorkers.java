@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 
 
 public class ActionsForWorkers extends Thread{
@@ -32,9 +33,11 @@ public class ActionsForWorkers extends Thread{
 
             String[] results = (String[])  in.readObject();
             /*results[0] -----> gpx_id*/
-
+            master.addResult(results[0],results);
             Master.chunkMapped(results[0]);
-            if(Master.startReduce(results[0])){System.out.println("Start Reducing gpx "+results[0]);}
+            System.out.println(Arrays.toString(results));
+            if(Master.startReduce(results[0])){master.reduce(results[0]);}
+
 
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
