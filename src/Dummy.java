@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Dummy extends Thread{
     File file;
@@ -34,13 +35,17 @@ public class Dummy extends Thread{
             /*AWAITS FOR THE RESULTS FROM MASTER
             * READS IT IN SOME KIND OF LIST + PRINTS OR STORES THEM*/
 //            ArrayList<String> results = (ArrayList<String>) in.readObject();
+            String[] results=(String[]) in.readObject();
+            String[] stats=(String[]) in.readObject();
+            System.out.println("Your stats: "+Arrays.toString(results));
+            System.out.println("All stats: "+Arrays.toString(stats));
 
         } catch (UnknownHostException unknownHost) {
             System.err.println("You are trying to connect to an unknown host!");
         } catch (IOException ioException) {
             ioException.printStackTrace();
-//        } catch (ClassNotFoundException e) {
-//            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         } finally {
             try {
                 in.close(); out.close();

@@ -94,6 +94,11 @@ public class ActionsForClients extends Thread {
             }
 
             /*Takes the reduced results and sends them back*/
+            while(master.getCustRes(gpxId)==null){}
+            out.writeObject(master.getCustRes(gpxId));
+            out.flush();
+            out.writeObject(master.getStats());
+            out.flush();
 
         }catch (IOException exc){
             exc.printStackTrace();
