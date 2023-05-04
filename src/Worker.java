@@ -14,6 +14,7 @@ public class Worker extends Thread {
     private Chunk chunk;
     private ArrayList<String[]> waypoints;
 
+    private static String server_ip;
 
     /*Constructor*/
 
@@ -33,7 +34,7 @@ public class Worker extends Thread {
 
 
         try {
-            String host = "localhost";
+            String host = server_ip;
             /* Create socket for contacting the server on worker port*/
 
             requestSocket = new Socket(host, this.port);
@@ -181,6 +182,8 @@ public class Worker extends Thread {
 
     public static void main(String[] args){
 
+
+        server_ip = args[0];
         /*Threads of worker*/
 
         int thread_1_id = (int)(Math.random()+1000);

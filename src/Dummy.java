@@ -5,7 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Dummy extends Thread{
-    File file;
+    private File file;
+    private static String server_ip;
 
     public Dummy(File file){
         this.file = file;
@@ -19,7 +20,7 @@ public class Dummy extends Thread{
 
         System.out.println(/*shows the threads Ι am in */);
         try {
-            String host = "localhost";
+            String host = server_ip;
             /* Create socket for contacting the server on port 4321*/
             requestSocket = new Socket(host, 5377);
 
@@ -32,11 +33,11 @@ public class Dummy extends Thread{
             out.writeObject(file);
             out.flush();
 
-            /*AWAITS FOR THE RESULTS FROM MASTER
-            * READS IT IN SOME KIND OF LIST + PRINTS OR STORES THEM*/
-//            ArrayList<String> results = (ArrayList<String>) in.readObject();
+            /*Results from Master*/
+
             String[] results=(String[]) in.readObject();
             String[] stats=(String[]) in.readObject();
+
             System.out.println("Your stats: "+Arrays.toString(results));
             System.out.println("All stats: "+Arrays.toString(stats));
 
@@ -65,6 +66,7 @@ public class Dummy extends Thread{
         * Waits for results
         * Prints results*/
 
+            server_ip = args[0];
             /*READS THE GPX FILES*/
 
             File in1 = new File("./gpx_files/route1.gpx");

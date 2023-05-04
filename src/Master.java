@@ -30,23 +30,19 @@ public class Master extends Thread implements Server {
     private static LinkedList<Chunk> readyChunks; /*Insert the ready for Workers chunks here*/
 
 
-
     /*These collections are used for Round Robin*/
     private static HashMap<Integer,LinkedList<Thread>> workers;
     private static List<String> worker_ips;
     private int rrIterator;
 
 
-
     /*These collections are used to trigger the "Reduce" phase properly*/
-
     private static HashMap<String,Integer[]> gpxCounter;
     private static HashMap <String,Integer> readyForReduce;
 
 
 
-    /*These collections are used in the reduce process*/
-
+    /*These collections are used for the Reduce process + Statistics*/
     private static HashMap <String,ArrayList<String[]>> total_results=new HashMap<>();
     private static HashMap <String,String[]> customer_results=new HashMap<>();
     private static String stats[];
@@ -73,7 +69,6 @@ public class Master extends Thread implements Server {
     /*Getters -- Setters*/
 
 
-
     /*Initializes the worker queue -- int:worker num
     *                                 LinkedList:queue of threads for the specific worker*/
     private void initWorkers(){
@@ -92,13 +87,13 @@ public class Master extends Thread implements Server {
 
 
     /*increases the number of chunks for the given gpx*/
-    public static void increaseChunkNumber(String gpx_id){
+    private static void increaseChunkNumber(String gpx_id){
         if(!gpxCounter.containsKey(gpx_id)){
             gpxCounter.put(gpx_id,new Integer[]{1,0});
         }else{
            Integer[] toChange = gpxCounter.get(gpx_id);
            toChange[0]++;
-           gpxCounter.put(gpx_id,toChange); /*TODO might need cloning*/
+           gpxCounter.put(gpx_id,toChange);
         }
     }
 
@@ -107,7 +102,7 @@ public class Master extends Thread implements Server {
 
     /*locks the FINAL chunk number (the one we need) for each gpx*/
     public static void lockValue(String key) {
-       Integer[] toChange = gpxCounter.get(key); /*is clone needed here? TODO*/
+       Integer[] toChange = gpxCounter.get(key);
        toChange[1] = 1;
        gpxCounter.put(key,toChange);
     }
@@ -125,7 +120,7 @@ public class Master extends Thread implements Server {
 
     private static int getReduceCounter(String gpx_id){return readyForReduce.get(gpx_id);}
 
-    public static String[] getCustRes(String id){
+    public static synchronized String[] getCustRes(String id){
         return customer_results.get(id);
     }
     public String[] getStats() {
@@ -153,7 +148,6 @@ public class Master extends Thread implements Server {
     * 2. The num of  total chunks of the specific gpx == The num of Reduced chunks of the specific gpx*/
 
     public static synchronized boolean startReduce(String gpx_id){
-
        return (gpxCounterReady(gpx_id) && (getGpxCounterValue(gpx_id) == getReduceCounter(gpx_id)));
     }
 
@@ -196,8 +190,7 @@ public class Master extends Thread implements Server {
 
     private String extractLon(String line){
         String[] find_lat_lon = line.split("lon");
-        String lon = find_lat_lon[1].split("\"")[1];
-        return lon;
+        return find_lat_lon[1].split("\"")[1];
     }
 
     private String extractEle(String line){
@@ -217,7 +210,7 @@ public class Master extends Thread implements Server {
     * checks if the chunk is full and needs to be sent to the ready queue*/
     private synchronized void addToChunk(String key, String[] key_values,boolean last_waypoint){
         if(chunks.containsKey(key)){
-            chunks.get(key).addData(key_values); /*check for ready here as well*/
+            chunks.get(key).addData(key_values);
         }else{
             Chunk c = new Chunk();
             c.addData(key_values);
@@ -237,8 +230,11 @@ public class Master extends Thread implements Server {
             increaseChunkNumber(key);
             if(last_waypoint){lockValue(key);} /*for reduce function*/
 
-            readyChunks.add(new Chunk(chunks.get(key))); /*Deep copy the chunk*/
-            chunks.remove(key);
+            synchronized (readyChunks) {
+                readyChunks.add(new Chunk(chunks.get(key))); /*Deep copy the chunk*/
+            }
+                chunks.remove(key);
+
 
             /*Since there is a chunk available we also notify the master to give it to a worker*/
 
@@ -250,9 +246,13 @@ public class Master extends Thread implements Server {
 
     /*Checks if there is a chunk ready to be sent for mapping
     * if there is then it removes it from the ready queue and sends it*/
-    public synchronized Chunk fetchChunk(){
-        if(readyChunks.isEmpty()){return null;}
-        return readyChunks.remove();
+    public  Chunk fetchChunk(){
+        synchronized (readyChunks) {
+            if (readyChunks.isEmpty()) {
+                return null;
+            }
+            return readyChunks.remove();
+        }
     }
 
 
@@ -263,7 +263,7 @@ public class Master extends Thread implements Server {
         double totalTime=0;
         double avSpeed;
         double totalElevation=0;
-
+        /*id --- gpx id*/
         for (String[] res:total_results.get(id)){
             totalDist+=Double.parseDouble(res[2]);
             totalElevation+=Double.parseDouble(res[5]);
@@ -275,10 +275,6 @@ public class Master extends Thread implements Server {
                 Double.toString(avSpeed),Double.toString(totalElevation)};
         put_cust_results(id,temp);
         merge_results(customer_results);
-        System.out.println("Client "+id+": Distance "+customer_results.get(id)[0]+" Total time "+customer_results.get(id)[1]+" Average speed "+customer_results.get(id)[2]+" Total elevation "+customer_results.get(id)[3]);
-        System.out.println("Stats: Distance "+stats[0]+" Total time "+stats[1]+" Average speed "+stats[2]+" Total elevation "+stats[3]);
-        /*TODO print here*/
-
 
     }
 
@@ -298,7 +294,6 @@ public class Master extends Thread implements Server {
 
     private synchronized void put_cust_results(String client_id,String[] res){
         customer_results.put(client_id,res);
-
     }
 
 
@@ -317,8 +312,6 @@ public class Master extends Thread implements Server {
         stats=new String[]{Double.toString(dis),Double.toString(time),
                 Double.toString(avspeed),Double.toString(elevation)};
     }
-
-
 
 
 
@@ -350,8 +343,6 @@ public class Master extends Thread implements Server {
                 }
             }
 
-
-
         } catch (IOException ioException) {
             ioException.printStackTrace();
         } finally {
@@ -370,18 +361,21 @@ public class Master extends Thread implements Server {
         /*The index of the ip signifies the ID of worker in the hashmap*/
         /*for example if an ip is in the second Node of the list it means that it belongs to our second worker*/
 
-        if(!worker_ips.contains(ip))
+        if(!worker_ips.contains(ip)) {
+            System.out.println(ip+" Accepted");
             worker_ips.add(ip);
+        }
 
         workers.get(worker_ips.indexOf(ip)).add(worker_thread);
     }
 
 
-    private synchronized void startWorkerThread(){ /*TODO try removing synchronized*/
-        while(workers.get(rrIterator).isEmpty()){/*Blocks if readyQueue is empty*/}
+    private synchronized void startWorkerThread(){
+        while(workers.get(rrIterator).isEmpty()){/*Blocks if workerQueue is empty*/}
         Thread t = workers.get(rrIterator).remove();
         t.start();
         if(num_of_workers>=2){rrIterator = (++rrIterator)%num_of_workers;}
+
     }
 
 
