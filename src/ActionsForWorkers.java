@@ -19,15 +19,16 @@ public class ActionsForWorkers extends Thread{
     } // Constructor
 
 
-
     @Override
     public void run(){
 
-//        System.out.println("Hi from "+ Thread.currentThread().getName());
         Chunk toSend;
 
         try{
+
+
             while ((toSend = master.fetchChunk()) == null) {/*Blocks connection*/}
+
 
             out.writeObject(toSend);
             out.flush();
@@ -36,10 +37,14 @@ public class ActionsForWorkers extends Thread{
 
             /*results[0] -----> gpx_id*/
 
+
             Master.chunkMapped(results[0]);
+
             master.addResult(results[0],results);
 
-            if(Master.startReduce(results[0])){master.reduce(results[0]);}
+            if(Master.startReduce(results[0])){
+                master.reduce(results[0]);
+            }
 
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);

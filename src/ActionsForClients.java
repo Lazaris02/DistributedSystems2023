@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 
 public class ActionsForClients extends Thread {
     /* This class is used to perform the actions the app clients ask for */
@@ -93,10 +94,15 @@ public class ActionsForClients extends Thread {
 
             }
 
+            String[] final_results;
+
             /*Takes the reduced results and sends them back*/
-            while(master.getCustRes(gpxId)==null){}
-            out.writeObject(master.getCustRes(gpxId));
+            while((final_results=Master.getCustRes(gpxId))==null){/*Blocks here*/}
+
+            System.out.println(Arrays.toString(final_results)+" "+ Thread.currentThread().getName());
+            out.writeObject(Master.getCustRes(gpxId));
             out.flush();
+
             out.writeObject(master.getStats());
             out.flush();
 

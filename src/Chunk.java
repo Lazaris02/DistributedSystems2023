@@ -14,7 +14,9 @@ public class Chunk implements Serializable {
 
     public Chunk(Chunk c){
         this.data = new ArrayList<>();
+
         this.data.addAll(c.getData());
+
     } /*Copy constructor*/
 
 
