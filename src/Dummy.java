@@ -37,9 +37,13 @@ public class Dummy extends Thread{
 
             String[] results=(String[]) in.readObject();
             String[] stats=(String[]) in.readObject();
+            Double[] individual_results = (Double[]) in.readObject();
 
-            System.out.println("Your stats: "+Arrays.toString(results));
-            System.out.println("All stats: "+Arrays.toString(stats));
+            System.out.println("Your stats: "+Arrays.toString(results)+Thread.currentThread().getName());
+            System.out.println("Your average stats: "+Arrays.toString(individual_results)+Thread.currentThread().getName());
+            System.out.println("Total average stats: "+Arrays.toString(stats)+Thread.currentThread().getName());
+
+
 
         } catch (UnknownHostException unknownHost) {
             System.err.println("You are trying to connect to an unknown host!");

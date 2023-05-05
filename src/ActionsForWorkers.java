@@ -43,7 +43,7 @@ public class ActionsForWorkers extends Thread{
             master.addResult(results[0],results);
 
             if(Master.startReduce(results[0])){
-                master.reduce(results[0]);
+                master.reduce(results[0],results[1]);
             }
 
         } catch (IOException | ClassNotFoundException e) {

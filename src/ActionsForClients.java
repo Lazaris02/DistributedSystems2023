@@ -103,7 +103,11 @@ public class ActionsForClients extends Thread {
             out.writeObject(Master.getCustRes(gpxId));
             out.flush();
 
-            out.writeObject(master.getStats());
+            out.writeObject(master.getTotalStats());
+            out.flush();
+
+            /*key[1]---->creator f.e creator1*/
+            out.writeObject(master.getIndividualStats(key[1]));
             out.flush();
 
         }catch (IOException exc){

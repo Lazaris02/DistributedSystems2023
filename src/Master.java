@@ -44,8 +44,15 @@ public class Master extends Thread implements Server {
 
     /*These collections are used for the Reduce process + Statistics*/
     private static HashMap <String,ArrayList<String[]>> total_results=new HashMap<>();
+
     private static HashMap <String,String[]> customer_results=new HashMap<>();
-    private static String stats[];
+
+    private static HashMap<String,String[]> individual_stats=new HashMap<>();
+
+    private static String stats[]; /*stats for all users*/
+
+    private static HashMap<String,Integer> gpx_per_user = new HashMap<>();
+
 
 
     /* Constructor */
@@ -123,9 +130,16 @@ public class Master extends Thread implements Server {
     public static synchronized String[] getCustRes(String id){
         return customer_results.get(id);
     }
-    public String[] getStats() {
+    public String[] getTotalStats() {
         return stats;
     }
+
+    public Double[] getIndividualStats(String customer_id){
+        String[] ITS = individual_stats.get(customer_id);
+        int num_of_gpx = gpx_per_user.get(customer_id);
+        return new Double[]{Double.parseDouble(ITS[0]) / num_of_gpx, Double.parseDouble(ITS[1]) / num_of_gpx,
+                Double.parseDouble(ITS[3]) / num_of_gpx};
+    } /*TODO edw eimaste*/
 
 
 
@@ -258,22 +272,28 @@ public class Master extends Thread implements Server {
 
 
     /*Reduce Function*/
-    public void reduce(String id){
+    public void reduce(String gpx_id,String user_id){
         double totalDist=0;
         double totalTime=0;
         double avSpeed;
         double totalElevation=0;
-        /*id --- gpx id*/
-        for (String[] res:total_results.get(id)){
+
+
+        for (String[] res:total_results.get(gpx_id)){
             totalDist+=Double.parseDouble(res[2]);
             totalElevation+=Double.parseDouble(res[5]);
             totalTime += Double.parseDouble(res[3]);
         }
+
         avSpeed=totalDist/totalTime; //m/s
         avSpeed=3.6*avSpeed; //km/h
+
         String[] temp=new String[]{Double.toString(totalDist),Double.toString(totalTime),
                 Double.toString(avSpeed),Double.toString(totalElevation)};
-        put_cust_results(id,temp);
+
+
+        put_cust_results(gpx_id,temp);/*for total results*/
+        put_individual_stats(user_id,temp);
         merge_results(customer_results);
 
     }
@@ -296,21 +316,54 @@ public class Master extends Thread implements Server {
         customer_results.put(client_id,res);
     }
 
+    private synchronized void put_individual_stats(String customer_id,String[] res){ /*TODO edw eimaste*/
+
+        int gpx_number;
+
+        if(!individual_stats.containsKey(customer_id)){
+            gpx_number = 1;
+            gpx_per_user.put(customer_id,gpx_number);
+        }
+        else{
+            gpx_number = gpx_per_user.get(customer_id);
+            gpx_per_user.put(customer_id,++gpx_number);
+
+            String[] old_results = individual_stats.get(customer_id);
+
+            for(int i=0; i< old_results.length; i++){
+                Double old_value = Double.parseDouble(old_results[i]);
+                Double new_value = Double.parseDouble(res[i]);
+                res[i] = Double.toString(old_value+new_value);
+            } /*TODO might need cloning*/
+
+        }
+        individual_stats.put(customer_id,res);
+    }
+
 
     private synchronized void merge_results(HashMap<String,String[]> results){
         double dis=0;
         double time=0;
         double elevation=0;
+        int counter =0;
+
         for(Map.Entry<String,String[]> entry:results.entrySet()){
+            counter++;
             String[] value=entry.getValue();
             dis+=Double.parseDouble(value[0]);
             time+=Double.parseDouble(value[1]);
             elevation+=Double.parseDouble(value[3]);
         }
-        double avspeed=dis/time;
-        avspeed=3.6*avspeed; //km/h
-        stats=new String[]{Double.toString(dis),Double.toString(time),
-                Double.toString(avspeed),Double.toString(elevation)};
+
+
+
+
+        double avg_time = time / counter; /*average time for all users*/
+        double avg_ele = elevation / counter; /*average elevation for all users*/
+        double avg_distance = dis / counter; /*average distance for all users*/
+
+        stats=new String[]{Double.toString(avg_distance),Double.toString(avg_time),
+                Double.toString(avg_ele)}; /*stats for all users*/
     }
 
 
