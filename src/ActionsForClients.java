@@ -100,10 +100,15 @@ public class ActionsForClients extends Thread {
             while((final_results=Master.getCustRes(gpxId))==null){/*Blocks here*/}
 
             System.out.println(Arrays.toString(final_results)+" "+ Thread.currentThread().getName());
+
             out.writeObject(Master.getCustRes(gpxId));
             out.flush();
 
-            out.writeObject(master.getStats());
+            out.writeObject(master.getTotalStats());
+            out.flush();
+
+            /*key[1]---->creator f.e creator1*/
+            out.writeObject(master.getIndividualStats(key[1]));
             out.flush();
 
         }catch (IOException exc){
