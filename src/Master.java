@@ -49,7 +49,7 @@ public class Master extends Thread implements Server {
 
     private static HashMap<String,String[]> individual_stats=new HashMap<>();
 
-    private static String stats[]; /*stats for all users*/
+    private static String[] stats; /*stats for all users*/
 
     private static HashMap<String,Integer> gpx_per_user = new HashMap<>();
 
@@ -129,17 +129,26 @@ public class Master extends Thread implements Server {
 
     public static synchronized String[] getCustRes(String id){
         return customer_results.get(id);
-    }
-    public String[] getTotalStats() {
+    } /*todo sync this*/
+    public  String[] getTotalStats() {
         return stats;
     }
 
     public Double[] getIndividualStats(String customer_id){
-        String[] ITS = individual_stats.get(customer_id);
-        int num_of_gpx = gpx_per_user.get(customer_id);
-        return new Double[]{Double.parseDouble(ITS[0]) / num_of_gpx, Double.parseDouble(ITS[1]) / num_of_gpx,
-                Double.parseDouble(ITS[3]) / num_of_gpx};
-    } /*TODO edw eimaste*/
+        String[] ITS;
+        int num_of_gpx;
+        synchronized (individual_stats) {
+                 ITS = individual_stats.get(customer_id).clone();
+            }
+
+        synchronized (gpx_per_user) {
+            num_of_gpx = gpx_per_user.get(customer_id);
+        }
+            System.out.println("User "+customer_id+"avg_dist:"+Double.parseDouble(ITS[0])+" "+num_of_gpx);
+            return new Double[]{Double.parseDouble(ITS[0]) / num_of_gpx, Double.parseDouble(ITS[1]) / num_of_gpx,
+                    Double.parseDouble(ITS[3]) / num_of_gpx};
+
+    }
 
 
 
@@ -279,7 +288,7 @@ public class Master extends Thread implements Server {
         double totalElevation=0;
 
 
-        for (String[] res:total_results.get(gpx_id)){
+        for (String[] res:total_results.get(gpx_id)){ /*todo this might need cloning*/
             totalDist+=Double.parseDouble(res[2]);
             totalElevation+=Double.parseDouble(res[5]);
             totalTime += Double.parseDouble(res[3]);
@@ -292,7 +301,7 @@ public class Master extends Thread implements Server {
                 Double.toString(avSpeed),Double.toString(totalElevation)};
 
 
-        put_cust_results(gpx_id,temp);/*for total results*/
+        put_cust_results(gpx_id,temp);/*for total results*/ /*todo sync this*/
         put_individual_stats(user_id,temp);
         merge_results(customer_results);
 
@@ -312,36 +321,48 @@ public class Master extends Thread implements Server {
     }
 
 
-    private synchronized void put_cust_results(String client_id,String[] res){
-        customer_results.put(client_id,res);
+    private synchronized void put_cust_results(String client_id,String[] res){/*TODO sync this*/
+            customer_results.put(client_id, res);
     }
 
-    private synchronized void put_individual_stats(String customer_id,String[] res){ /*TODO edw eimaste*/
-
+    private synchronized void put_individual_stats(String customer_id,String[] res){
+        /*we hold 2 separate hashmaps
+        * 1 contains the sum of the stats we need to preserve for each creator
+        * 2 contains the number of gpx that belong to the specific user
+        * When it is time to return them we just get the values from hashmap 1 and divide by the number of gpx files
+        * which is given to us by hashmap 2*/
         int gpx_number;
 
         if(!individual_stats.containsKey(customer_id)){
             gpx_number = 1;
-            gpx_per_user.put(customer_id,gpx_number);
+            synchronized (gpx_per_user) {
+                gpx_per_user.put(customer_id, gpx_number);
+            }
+            synchronized (individual_stats) {
+                individual_stats.put(customer_id, res.clone());
+            }
         }
-        else{
-            gpx_number = gpx_per_user.get(customer_id);
-            gpx_per_user.put(customer_id,++gpx_number);
+        else {
+            synchronized (gpx_per_user) {
+                gpx_number = gpx_per_user.get(customer_id);
+                gpx_per_user.put(customer_id, ++gpx_number);
+            }
 
             String[] old_results = individual_stats.get(customer_id);
-
-            for(int i=0; i< old_results.length; i++){
-                Double old_value = Double.parseDouble(old_results[i]);
-                Double new_value = Double.parseDouble(res[i]);
-                res[i] = Double.toString(old_value+new_value);
-            } /*TODO might need cloning*/
-
+            String[] new_results = new String[old_results.length];
+            for (int i = 0; i < old_results.length; i++) {
+                new_results[i] = Double.toString(Double.parseDouble(old_results[i]) + Double.parseDouble(res[i]));
+            }
+            synchronized (individual_stats) {
+                individual_stats.put(customer_id, new_results);
+            }
         }
-        individual_stats.put(customer_id,res);
+
     }
 
 
     private synchronized void merge_results(HashMap<String,String[]> results){
+        /*todo sync this*/
         double dis=0;
         double time=0;
         double elevation=0;

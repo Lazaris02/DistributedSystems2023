@@ -100,6 +100,7 @@ public class ActionsForClients extends Thread {
             while((final_results=Master.getCustRes(gpxId))==null){/*Blocks here*/}
 
             System.out.println(Arrays.toString(final_results)+" "+ Thread.currentThread().getName());
+
             out.writeObject(Master.getCustRes(gpxId));
             out.flush();
 
