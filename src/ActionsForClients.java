@@ -99,7 +99,7 @@ public class ActionsForClients extends Thread {
             /*Takes the reduced results and sends them back*/
             while((final_results=Master.getCustRes(gpxId))==null){/*Blocks here*/}
 
-            System.out.println(Arrays.toString(final_results)+" "+ Thread.currentThread().getName());
+            System.out.println("Sending back to Client..."+" "+Thread.currentThread().getName());
 
             out.writeObject(Master.getCustRes(gpxId));
             out.flush();

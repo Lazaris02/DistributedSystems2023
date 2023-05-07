@@ -18,7 +18,6 @@ public class Dummy extends Thread{
         ObjectInputStream in = null ;
         Socket requestSocket= null ;
 
-        System.out.println(/*shows the threads Ι am in */);
         try {
             String host = server_ip;
             /* Create socket for contacting the server on port 4321*/
@@ -39,8 +38,8 @@ public class Dummy extends Thread{
             String[] stats=(String[]) in.readObject();
             Double[] individual_results = (Double[]) in.readObject();
 
-            System.out.println("Your total stats: "+Arrays.toString(results)+"\n"+
-                    "Your average stats: "+Arrays.toString(individual_results)+"\n"+
+            System.out.println("User's total stats: "+Arrays.toString(results)+"\n"+
+                    "User's average stats: "+Arrays.toString(individual_results)+"\n"+
                     "Total average stats: "+Arrays.toString(stats)+Thread.currentThread().getName()+"\n\n" );
 
 
@@ -69,7 +68,10 @@ public class Dummy extends Thread{
         * Waits for results
         * Prints results*/
 
-            server_ip = args[0];
+            server_ip = args[0]; /*input the ip of the master --or localhost if on same device*/
+
+
+
             /*READS THE GPX FILES*/
 
             File in1 = new File("./gpx_files/route1.gpx");

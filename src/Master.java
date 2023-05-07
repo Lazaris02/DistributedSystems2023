@@ -49,7 +49,7 @@ public class Master extends Thread implements Server {
 
     private static HashMap<String,String[]> individual_stats=new HashMap<>();
 
-    private static String[] stats; /*stats for all users*/
+    private static String[] stats=new String[3]; /*stats for all users*/
 
     private static HashMap<String,Integer> gpx_per_user = new HashMap<>();
 
@@ -129,9 +129,12 @@ public class Master extends Thread implements Server {
 
     public static synchronized String[] getCustRes(String id){
         return customer_results.get(id);
-    } /*todo sync this*/
-    public  String[] getTotalStats() {
-        return stats;
+    }
+    public String[] getTotalStats()
+    {
+        synchronized (stats) {
+            return stats.clone();
+        }
     }
 
     public Double[] getIndividualStats(String customer_id){
@@ -144,7 +147,7 @@ public class Master extends Thread implements Server {
         synchronized (gpx_per_user) {
             num_of_gpx = gpx_per_user.get(customer_id);
         }
-            System.out.println("User "+customer_id+"avg_dist:"+Double.parseDouble(ITS[0])+" "+num_of_gpx);
+
             return new Double[]{Double.parseDouble(ITS[0]) / num_of_gpx, Double.parseDouble(ITS[1]) / num_of_gpx,
                     Double.parseDouble(ITS[3]) / num_of_gpx};
 
@@ -288,7 +291,7 @@ public class Master extends Thread implements Server {
         double totalElevation=0;
 
 
-        for (String[] res:total_results.get(gpx_id)){ /*todo this might need cloning*/
+        for (String[] res:total_results.get(gpx_id)){
             totalDist+=Double.parseDouble(res[2]);
             totalElevation+=Double.parseDouble(res[5]);
             totalTime += Double.parseDouble(res[3]);
@@ -301,7 +304,7 @@ public class Master extends Thread implements Server {
                 Double.toString(avSpeed),Double.toString(totalElevation)};
 
 
-        put_cust_results(gpx_id,temp);/*for total results*/ /*todo sync this*/
+        put_cust_results(gpx_id,temp);/*for total results*/
         put_individual_stats(user_id,temp);
         merge_results(customer_results);
 
@@ -321,7 +324,7 @@ public class Master extends Thread implements Server {
     }
 
 
-    private synchronized void put_cust_results(String client_id,String[] res){/*TODO sync this*/
+    private synchronized void put_cust_results(String client_id,String[] res){
             customer_results.put(client_id, res);
     }
 
@@ -362,7 +365,7 @@ public class Master extends Thread implements Server {
 
 
     private synchronized void merge_results(HashMap<String,String[]> results){
-        /*todo sync this*/
+
         double dis=0;
         double time=0;
         double elevation=0;
@@ -382,9 +385,10 @@ public class Master extends Thread implements Server {
         double avg_time = time / counter; /*average time for all users*/
         double avg_ele = elevation / counter; /*average elevation for all users*/
         double avg_distance = dis / counter; /*average distance for all users*/
-
-        stats=new String[]{Double.toString(avg_distance),Double.toString(avg_time),
-                Double.toString(avg_ele)}; /*stats for all users*/
+        synchronized (stats) {
+            stats = new String[]{Double.toString(avg_distance), Double.toString(avg_time),
+                    Double.toString(avg_ele)}; /*stats for all users*/
+        }
     }
 
 
@@ -436,7 +440,7 @@ public class Master extends Thread implements Server {
         /*for example if an ip is in the second Node of the list it means that it belongs to our second worker*/
 
         if(!worker_ips.contains(ip)) {
-            System.out.println(ip+" Accepted");
+            System.out.println(ip+" Accepted as Worker");
             worker_ips.add(ip);
         }
 

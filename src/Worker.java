@@ -48,7 +48,7 @@ public class Worker extends Thread {
 
             waypoints=extractChunk(chunk);
 
-
+            System.out.println("Creating intermediate results"+" "+Thread.currentThread().getName());
 
                 /*In each chunk I have the same creator and gpx id*/
 
@@ -181,28 +181,43 @@ public class Worker extends Thread {
     public static void main(String[] args){
 
 
-        server_ip = args[0];
+        server_ip = args[0];/*input the ip of the master or localhost if on same device*/
         /*Threads of worker*/
 
-        int thread_1_id = (int)(Math.random()+1000);
-        int thread_2_id =(int)(Math.random()+1000);
+        int thread_1_id = (int)(Math.random()+10000);
+        int thread_2_id =(int)(Math.random()+10000);
+        int thread_3_id = (int)(Math.random()+10000);
+        int thread_4_id =(int)(Math.random()+10000);
 
         Worker worker_thread_1 = new Worker(thread_1_id);
         Worker worker_thread_2 = new Worker(thread_2_id);
+        Worker worker_thread_3 = new Worker(thread_3_id);
+        Worker worker_thread_4 = new Worker(thread_4_id);
 
         worker_thread_1.start();
         worker_thread_2.start();
+        worker_thread_3.start();
+        worker_thread_4.start();
 
         while(true){
 
             if(!worker_thread_1.isAlive()){
-                worker_thread_1 = new Worker((int)(Math.random()+1000));
+                worker_thread_1 = new Worker((int)(Math.random()+10000));
                 worker_thread_1.start();
             }
             if(!worker_thread_2.isAlive()){
-                worker_thread_2 = new Worker((int)(Math.random()+1000));
+                worker_thread_2 = new Worker((int)(Math.random()+10000));
                 worker_thread_2.start();
             }
+            if(!worker_thread_3.isAlive()){
+                worker_thread_3 = new Worker((int)(Math.random()+10000));
+                worker_thread_3.start();
+            }
+            if(!worker_thread_4.isAlive()){
+                worker_thread_4 = new Worker((int)(Math.random()+10000));
+                worker_thread_4.start();
+            }
+
 
         }
     }
