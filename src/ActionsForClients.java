@@ -1,6 +1,6 @@
 import java.io.*;
 import java.net.*;
-import java.util.Arrays;
+import java.util.List;
 
 public class ActionsForClients extends Thread {
     /* This class is used to perform the actions the app clients ask for */
@@ -43,13 +43,13 @@ public class ActionsForClients extends Thread {
          * after that the reduce process starts and the file*/
 
         try{
-            File gpx = (File) in.readObject();
+            List<String> file = (List<String>) in.readObject();
 
             /*find the "creator" and use it as an id */
-            BufferedReader file = new BufferedReader(new FileReader(gpx));
 
-            file.readLine(); // first line is useless
-            String line = file.readLine(); // second line contains the creator
+
+            file.remove(0); // first line is useless
+            String line = file.remove(0); // second line contains the creator
 
             String creator = getCreator(line);// should return user1 f.e
             String gpxId = createGpxId(); // we also need an id for the gpx file
@@ -67,7 +67,7 @@ public class ActionsForClients extends Thread {
             int chunk_counter = 0;
 
             boolean last_waypoint = false;
-            line = file.readLine();
+            line = file.remove(0);
 
 
             while(!line.contains("</gpx>")){
@@ -75,13 +75,13 @@ public class ActionsForClients extends Thread {
                 int i =0;
                 while(!line.contains("</wpt>")){
                     if(i!=0)
-                        line = file.readLine();
+                        line = file.remove(0);
                     waypoint_lines[i] = line;
                     i++;
                 } /*Creates the waypoint*/
 
 
-                line = file.readLine();
+                line = file.remove(0);
                 if(line.contains("</gpx>")){last_waypoint = true;} /*Checks if it is the last one*/
 
                 master.map(key,waypoint_lines,last_waypoint); /*send the waypoint for mapping*/

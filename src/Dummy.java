@@ -1,15 +1,18 @@
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Dummy extends Thread{
-    private File file;
+    private String file_path;
     private static String server_ip;
 
-    public Dummy(File file){
-        this.file = file;
+    public Dummy(String file_path){
+        this.file_path = file_path;
     }
 
     @Override
@@ -26,6 +29,10 @@ public class Dummy extends Thread{
             /* Create the streams to send and receive data from server */
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             in = new ObjectInputStream(requestSocket.getInputStream());
+
+            /*Stores the gpx in an array of Strings*/
+            List<String> file = Files.readAllLines(Paths.get(file_path));
+
 
             /*Sends the gpx file*/
 
@@ -74,22 +81,26 @@ public class Dummy extends Thread{
 
             /*READS THE GPX FILES*/
 
-            File in1 = new File("./gpx_files/route1.gpx");
-            File in2 = new File("./gpx_files/route2.gpx");
-            File in3 = new File("./gpx_files/route3.gpx");
-            File in4 = new File("./gpx_files/route4.gpx");
-            File in5 = new File("./gpx_files/route5.gpx");
-            File in6 = new File("./gpx_files/route6.gpx");
+        String path_1 = "./gpx_files/route1.gpx";
+        String path_2 = "./gpx_files/route2.gpx";
+        String path_3 = "./gpx_files/route3.gpx";
+        String path_4 = "./gpx_files/route4.gpx";
+        String path_5 = "./gpx_files/route5.gpx";
+        String path_6 = "./gpx_files/route6.gpx";
 
 
-            /*INIT CLIENTS*/
 
-            Dummy dummy1 = new Dummy(in1);
-            Dummy dummy2 = new Dummy(in2);
-            Dummy dummy3 = new Dummy(in3);
-            Dummy dummy4 = new Dummy(in4);
-            Dummy dummy5 = new Dummy(in5);
-            Dummy dummy6 = new Dummy(in6);
+
+
+
+        /*INIT CLIENTS*/
+
+            Dummy dummy1 = new Dummy(path_1);
+            Dummy dummy2 = new Dummy(path_2);
+            Dummy dummy3 = new Dummy(path_3);
+            Dummy dummy4 = new Dummy(path_4);
+            Dummy dummy5 = new Dummy(path_5);
+            Dummy dummy6 = new Dummy(path_6);
 
             dummy1.start();
             dummy2.start();
