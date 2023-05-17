@@ -42,17 +42,15 @@ public class Master extends Thread implements Server {
 
 
 
-    /*These collections are used for the Reduce process + Statistics*/
+    /*These objects are used for the Reduce process + Statistics*/
     private static HashMap <String,ArrayList<String[]>> total_results=new HashMap<>();
+    private static Integer total_gpx = 0;
 
     private static HashMap <String,String[]> customer_results=new HashMap<>();
 
     private static HashMap<String,String[]> individual_stats=new HashMap<>();
 
-    private static String[] stats=new String[3]; /*stats for all users*/
-
     private static HashMap<String,Integer> gpx_per_user = new HashMap<>();
-
 
 
     /* Constructor */
@@ -130,11 +128,25 @@ public class Master extends Thread implements Server {
     public static synchronized String[] getCustRes(String id){
         return customer_results.get(id);
     }
-    public String[] getTotalStats()
-    {
-        synchronized (stats) {
-            return stats.clone();
+
+    public Double[] getTotalStats(){ /*TODO change here*/
+        int counter;
+        double dis=0,time=0,elevation=0;
+
+        synchronized (customer_results) {
+            /*calculates the total stats (from all gpx we have)*/
+            for (Map.Entry<String, String[]> entry : customer_results.entrySet()) {
+                String[] value = entry.getValue();
+                dis += Double.parseDouble(value[0]);
+                time += Double.parseDouble(value[1]);
+                elevation += Double.parseDouble(value[3]);
+            }
         }
+
+        synchronized (total_gpx){counter = total_gpx.intValue();}
+
+        return new Double[]{dis / counter , time /counter , elevation / counter};/*stats for all users*/
+
     }
 
     public Double[] getIndividualStats(String customer_id){
@@ -273,8 +285,8 @@ public class Master extends Thread implements Server {
     /*Checks if there is a chunk ready to be sent for mapping
     * if there is then it removes it from the ready queue and sends it*/
     public  Chunk fetchChunk(){
-        synchronized (readyChunks) {
-            if (readyChunks.isEmpty()) {
+        synchronized (readyChunks){
+            if (readyChunks.isEmpty()){
                 return null;
             }
             return readyChunks.remove();
@@ -291,6 +303,9 @@ public class Master extends Thread implements Server {
         double totalElevation=0;
 
 
+
+        synchronized (total_gpx){total_gpx++;} /*TODO change here*/
+
         for (String[] res:total_results.get(gpx_id)){
             totalDist+=Double.parseDouble(res[2]);
             totalElevation+=Double.parseDouble(res[5]);
@@ -306,8 +321,6 @@ public class Master extends Thread implements Server {
 
         put_cust_results(gpx_id,temp);/*for total results*/
         put_individual_stats(user_id,temp);
-        merge_results(customer_results);
-
     }
 
 
@@ -324,7 +337,7 @@ public class Master extends Thread implements Server {
     }
 
 
-    private synchronized void put_cust_results(String client_id,String[] res){
+    private synchronized void put_cust_results(String client_id,String[] res){ /*TODO might need sync here*/
             customer_results.put(client_id, res);
     }
 
@@ -364,32 +377,6 @@ public class Master extends Thread implements Server {
     }
 
 
-    private synchronized void merge_results(HashMap<String,String[]> results){
-
-        double dis=0;
-        double time=0;
-        double elevation=0;
-        int counter =0;
-
-        for(Map.Entry<String,String[]> entry:results.entrySet()){
-            counter++;
-            String[] value=entry.getValue();
-            dis+=Double.parseDouble(value[0]);
-            time+=Double.parseDouble(value[1]);
-            elevation+=Double.parseDouble(value[3]);
-        }
-
-
-
-
-        double avg_time = time / counter; /*average time for all users*/
-        double avg_ele = elevation / counter; /*average elevation for all users*/
-        double avg_distance = dis / counter; /*average distance for all users*/
-        synchronized (stats) {
-            stats = new String[]{Double.toString(avg_distance), Double.toString(avg_time),
-                    Double.toString(avg_ele)}; /*stats for all users*/
-        }
-    }
 
 
 

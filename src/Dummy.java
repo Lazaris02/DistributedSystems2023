@@ -42,7 +42,7 @@ public class Dummy extends Thread{
             /*Results from Master*/
 
             String[] results=(String[]) in.readObject();
-            String[] stats=(String[]) in.readObject();
+            Double[] stats=(Double[]) in.readObject();
             Double[] individual_results = (Double[]) in.readObject();
 
             System.out.println("User's total stats: "+Arrays.toString(results)+"\n"+
